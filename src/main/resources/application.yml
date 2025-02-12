@@ -1,0 +1,36 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: Comment
+
+  datasource:
+    driver-class-name: com.mysql.jdbc.Driver
+    url: jdbc:mysql://127.0.0.1:3306/hmdp?useSSL=false&serverTimezone=UTC
+    username: root
+    password: 123456
+
+  data:
+    redis:
+      host: 192.168.181.130
+      port: 6379
+      password: 123456
+      lettuce:
+        pool:
+          max-active: 10
+          max-idle: 10
+          min-idle: 1
+          time-between-eviction-runs: 10s
+
+  # JSON处理时忽略非空字段
+  jackson:
+    default-property-inclusion: non_null
+
+# mybatis-plus别名扫描包
+mybatis-plus:
+  type-aliases-package: com.comment.entity
+
+logging:
+  level:
+    com.comment: debug
