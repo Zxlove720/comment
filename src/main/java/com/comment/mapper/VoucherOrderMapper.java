@@ -2,6 +2,7 @@ package com.comment.mapper;
 
 import com.comment.entity.VoucherOrder;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import org.apache.ibatis.annotations.Mapper;
 
 /**
  * <p>
@@ -11,6 +12,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
  * @author wzb
  * @since 2025-2-12
  */
+@Mapper
 public interface VoucherOrderMapper extends BaseMapper<VoucherOrder> {
 
 }
