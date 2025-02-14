@@ -72,7 +72,9 @@ public class UserController {
         String code = loginForm.getCode();
         if (cacheCode == null || !cacheCode.toString().equals(code)) {
             // 假如session中没有存储验证码或者验证码比对失败，直接返回
+            return Result.fail("验证码错误");
         }
+        
 
 
         return Result.fail("功能未完成");
