@@ -80,10 +80,12 @@ public class UserController {
         // 5.判断用户是否存在
         if (user == null) {
             // 6.用户不存在，那么创建用户
+            user = createUserWithPhone(phone);
         }
-
-
-        return Result.fail("功能未完成");
+        // 7.将用户信息保存到session中
+        session.setAttribute("user", user);
+        // 成功响应
+        return Result.ok();
     }
 
     /**
