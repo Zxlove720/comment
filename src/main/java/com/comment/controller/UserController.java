@@ -59,7 +59,22 @@ public class UserController {
      */
     @PostMapping("/login")
     public Result login(@RequestBody LoginFormDTO loginForm, HttpSession session){
-        // TODO 实现登录功能
+        // 1.校验手机号是否合法
+        String phone = loginForm.getPhone();
+        if (RegexUtils.isPhoneInvalid(phone)) {
+            // 2.如果手机号不合法，则直接返回错误信息
+            return Result.fail("手机号格式错误");
+        }
+        // 3.校验验证码
+            // 获取session中存储的验证码
+        Object cacheCode = session.getAttribute("code");
+            // 获取请求中发送的验证码
+        String code = loginForm.getCode();
+        if (cacheCode == null || !cacheCode.toString().equals(code)) {
+            // 假如session中没有存储验证码或者验证码比对失败，直接返回
+        }
+
+
         return Result.fail("功能未完成");
     }
 
