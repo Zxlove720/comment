@@ -4,6 +4,7 @@ package com.comment.controller;
 import cn.hutool.core.util.RandomUtil;
 import com.comment.dto.LoginFormDTO;
 import com.comment.dto.Result;
+import com.comment.entity.User;
 import com.comment.entity.UserInfo;
 import com.comment.service.IUserInfoService;
 import com.comment.service.IUserService;
@@ -74,7 +75,12 @@ public class UserController {
             // 假如session中没有存储验证码或者验证码比对失败，直接返回
             return Result.fail("验证码错误");
         }
-        
+        // 4.验证码校验成功，根据手机号查询用户 Mybatis-plus
+        User user = userService.query().eq("phone", phone).one();
+        // 5.判断用户是否存在
+        if (user == null) {
+            // 6.用户不存在，那么创建用户
+        }
 
 
         return Result.fail("功能未完成");
