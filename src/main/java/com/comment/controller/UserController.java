@@ -1,11 +1,13 @@
 package com.comment.controller;
 
 
+import cn.hutool.core.util.RandomUtil;
 import com.comment.dto.LoginFormDTO;
 import com.comment.dto.Result;
 import com.comment.entity.UserInfo;
 import com.comment.service.IUserInfoService;
 import com.comment.service.IUserService;
+import com.comment.utils.RegexUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
@@ -36,8 +38,19 @@ public class UserController {
      */
     @PostMapping("code")
     public Result sendCode(@RequestParam("phone") String phone, HttpSession session) {
-        // TODO 发送短信验证码并保存验证码
-        return Result.fail("功能未完成");
+        // 1.校验手机号是否合法
+        if (RegexUtils.isPhoneInvalid(phone)) {
+            // 2.如果手机号不合法，返回错误信息
+            return Result.fail("手机号格式错误");
+        }
+        // 3.手机号合法，生成验证码
+        String code = RandomUtil.randomNumbers(6);
+        // 4.将验证码保存至 session
+        session.setAttribute("code", code);
+        // 5.发送验证码（短信功能待完成）
+        log.info("发送短信验证码成功，验证码为：{}", code);
+        // 响应结果
+        return Result.ok();
     }
 
     /**
