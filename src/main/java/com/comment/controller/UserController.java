@@ -10,6 +10,7 @@ import com.comment.service.IUserInfoService;
 import com.comment.service.IUserService;
 import com.comment.utils.RegexUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.BeanUtils;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.annotation.Resource;
@@ -87,6 +88,20 @@ public class UserController {
         // 成功响应
         return Result.ok();
     }
+
+    /**
+     * 新用户注册
+     * @param phone 用户电话号码
+     * @return User
+     */
+    public User createUserWithPhone(String phone) {
+        User user = new User();
+        user.setPhone(phone);
+        user.setNickName("user_" + RandomUtil.randomString(10));
+        userService.save(user);
+        return user;
+    }
+
 
     /**
      * 登出功能
