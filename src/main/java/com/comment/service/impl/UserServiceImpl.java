@@ -1,5 +1,8 @@
 package com.comment.service.impl;
 
+import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.bean.copier.CopyOptions;
+import cn.hutool.core.lang.UUID;
 import cn.hutool.core.util.RandomUtil;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.comment.dto.LoginFormDTO;
@@ -10,10 +13,15 @@ import com.comment.mapper.UserMapper;
 import com.comment.service.IUserService;
 import com.comment.utils.RegexUtils;
 import com.comment.utils.UserHolder;
+import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpSession;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.BeanUtils;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 /**
  * <p>
@@ -26,6 +34,9 @@ import org.springframework.stereotype.Service;
 @Service
 @Slf4j
 public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IUserService {
+
+    @Resource
+    private StringRedisTemplate redisTemplate;
 
     /**
      * 发送手机验证码
@@ -47,11 +58,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         log.info("发送短信验证码成功，验证码为：{}", code);
         // 响应结果
         return Result.ok();
-    }
-
-    @Override
-    public Result me() {
-        return Result.ok(query().eq("id", UserHolder.getUser().getId()).one());
     }
 
     /**
@@ -83,13 +89,23 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
             // 6.用户不存在，那么创建用户
             user = createUserWithPhone(phone);
         }
-        // 7.将用户信息转换为UserDTO保存到session中
-        // 使用UserDTO替代User，可以减少内存消耗和保护用户隐私
+        // 7.将用户信息转换为UserDTO保存到redis中
+        // 7.1 随机生成token，作为登录令牌
+        String token = UUID.randomUUID().toString(true);
+        // 7.2 将User对象转换为HashMap存储
         UserDTO userDTO = new UserDTO();
-        BeanUtils.copyProperties(user, userDTO);
-        session.setAttribute("user", userDTO);
-        // 成功响应
-        return Result.ok();
+        BeanUtil.copyProperties(user, userDTO);
+        Map<String, Object> userMap = BeanUtil.beanToMap(userDTO, new HashMap<>(),
+                CopyOptions.create()
+                        .setIgnoreNullValue(true)
+                        .setFieldValueEditor((fieldName, fieldValue) -> fieldValue.toString()));
+        // 7.3存储
+        String tokenKey = "user:login" + token;
+        redisTemplate.opsForHash().putAll(tokenKey, userMap);
+        // 7.4设置token有效期
+        redisTemplate.expire(tokenKey, 30, TimeUnit.MINUTES);
+        // 8.返回token
+        return Result.ok(token);
     }
 
     /**
@@ -103,5 +119,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         user.setNickName("user_" + RandomUtil.randomString(10));
         save(user);
         return user;
+    }
+
+    @Override
+    public Result me() {
+        return Result.ok(query().eq("id", UserHolder.getUser().getId()).one());
     }
 }
