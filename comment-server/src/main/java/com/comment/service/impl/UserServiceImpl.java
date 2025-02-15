@@ -36,7 +36,7 @@ import java.util.concurrent.TimeUnit;
 public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IUserService {
 
     @Resource
-    private StringRedisTemplate redisTemplate;
+    private StringRedisTemplate stringRedisTemplate;
 
     /**
      * 发送手机验证码
@@ -101,9 +101,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
                         .setFieldValueEditor((fieldName, fieldValue) -> fieldValue.toString()));
         // 7.3存储
         String tokenKey = "user:login" + token;
-        redisTemplate.opsForHash().putAll(tokenKey, userMap);
+        stringRedisTemplate.opsForHash().putAll(tokenKey, userMap);
         // 7.4设置token有效期
-        redisTemplate.expire(tokenKey, 30, TimeUnit.MINUTES);
+        stringRedisTemplate.expire(tokenKey, 30, TimeUnit.MINUTES);
         // 8.返回token
         return Result.ok(token);
     }
