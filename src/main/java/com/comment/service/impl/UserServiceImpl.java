@@ -9,6 +9,7 @@ import com.comment.entity.User;
 import com.comment.mapper.UserMapper;
 import com.comment.service.IUserService;
 import com.comment.utils.RegexUtils;
+import com.comment.utils.UserHolder;
 import jakarta.servlet.http.HttpSession;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
@@ -46,6 +47,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         log.info("发送短信验证码成功，验证码为：{}", code);
         // 响应结果
         return Result.ok();
+    }
+
+    @Override
+    public Result me() {
+        return Result.ok(query().eq("id", UserHolder.getUser().getId()).one());
     }
 
     /**

@@ -1,17 +1,12 @@
 package com.comment.controller;
 
 
-import cn.hutool.core.util.RandomUtil;
 import com.comment.dto.LoginFormDTO;
 import com.comment.dto.Result;
-import com.comment.dto.UserDTO;
-import com.comment.entity.User;
 import com.comment.entity.UserInfo;
 import com.comment.service.IUserInfoService;
 import com.comment.service.IUserService;
-import com.comment.utils.RegexUtils;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.BeanUtils;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.annotation.Resource;
@@ -68,8 +63,7 @@ public class UserController {
 
     @GetMapping("/me")
     public Result me(){
-        // TODO 获取当前登录的用户并返回
-        return Result.fail("功能未完成");
+       return userService.me();
     }
 
     @GetMapping("/info/{id}")
