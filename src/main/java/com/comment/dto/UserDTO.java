@@ -2,6 +2,9 @@ package com.comment.dto;
 
 import lombok.Data;
 
+/**
+ * UserDTO
+ */
 @Data
 public class UserDTO {
     private Long id;
