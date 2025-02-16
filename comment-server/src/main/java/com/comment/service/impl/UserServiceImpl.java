@@ -5,6 +5,7 @@ import cn.hutool.core.bean.copier.CopyOptions;
 import cn.hutool.core.lang.UUID;
 import cn.hutool.core.util.RandomUtil;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.comment.constant.UserConstant;
 import com.comment.dto.LoginFormDTO;
 import com.comment.dto.Result;
 import com.comment.dto.UserDTO;
@@ -100,10 +101,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
                         .setIgnoreNullValue(true)
                         .setFieldValueEditor((fieldName, fieldValue) -> fieldValue.toString()));
         // 7.3存储
-        String tokenKey = "user:login" + token;
+        String tokenKey = UserConstant.USER_LOGIN_KEY + token;
         stringRedisTemplate.opsForHash().putAll(tokenKey, userMap);
         // 7.4设置token有效期
-        stringRedisTemplate.expire(tokenKey, 30, TimeUnit.MINUTES);
+        stringRedisTemplate.expire(tokenKey, UserConstant.USER_LOGIN_TTL, TimeUnit.MINUTES);
         // 8.返回token
         return Result.ok(token);
     }
