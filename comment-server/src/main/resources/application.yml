@@ -13,7 +13,7 @@ spring:
     default-property-inclusion: non_null # JSON处理时忽略非空字段
   data:
     redis:
-      host: 192.168.181.130
+      host: 192.168.181.131
       port: 6379
       password: 123456
       lettuce:
