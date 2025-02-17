@@ -5,6 +5,7 @@ import cn.hutool.core.bean.copier.CopyOptions;
 import cn.hutool.core.lang.UUID;
 import cn.hutool.core.util.RandomUtil;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.comment.constant.ErrorConstant;
 import com.comment.constant.UserConstant;
 import com.comment.dto.LoginFormDTO;
 import com.comment.dto.Result;
@@ -49,7 +50,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         // 1.校验手机号是否合法
         if (RegexUtils.isPhoneInvalid(phone)) {
             // 2.如果手机号不合法，返回错误信息
-            return Result.fail("手机号格式错误");
+            return Result.fail(ErrorConstant.PHONE_NUMBER_ERROR);
         }
         // 3.手机号合法，生成验证码
         String code = RandomUtil.randomNumbers(6);
@@ -72,7 +73,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         String phone = loginForm.getPhone();
         if (RegexUtils.isPhoneInvalid(phone)) {
             // 2.如果手机号不合法，则直接返回错误信息
-            return Result.fail("手机号格式错误");
+            return Result.fail(ErrorConstant.PHONE_NUMBER_ERROR);
         }
         // 3.校验验证码
             // 获取session中存储的验证码
@@ -81,7 +82,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         String code = loginForm.getCode();
         if (cacheCode == null || !cacheCode.toString().equals(code)) {
             // 假如session中没有存储验证码或者验证码比对失败，直接返回
-            return Result.fail("验证码错误");
+            return Result.fail(ErrorConstant.CODE_ERROR);
         }
         // 4.验证码校验成功，根据手机号查询用户 Mybatis-plus
         User user = query().eq("phone", phone).one();
@@ -100,7 +101,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
                 CopyOptions.create()
                         .setIgnoreNullValue(true)
                         .setFieldValueEditor((fieldName, fieldValue) -> fieldValue.toString()));
-        // 7.3存储
+        // 7.3存储redis
         String tokenKey = UserConstant.USER_LOGIN_KEY + token;
         stringRedisTemplate.opsForHash().putAll(tokenKey, userMap);
         // 7.4设置token有效期
