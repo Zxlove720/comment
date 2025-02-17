@@ -6,6 +6,7 @@ import cn.hutool.core.lang.UUID;
 import cn.hutool.core.util.RandomUtil;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.comment.constant.ErrorConstant;
+import com.comment.constant.MessageConstant;
 import com.comment.constant.UserConstant;
 import com.comment.dto.LoginFormDTO;
 import com.comment.dto.Result;
@@ -16,7 +17,6 @@ import com.comment.service.IUserService;
 import com.comment.utils.RegexUtils;
 import com.comment.utils.UserHolder;
 import jakarta.annotation.Resource;
-import jakarta.servlet.http.HttpSession;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
@@ -46,7 +46,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
      * @return Result
      */
     @Override
-    public Result sendCode(String phone, HttpSession session) {
+    public Result sendCode(String phone) {
         // 1.校验手机号是否合法
         if (RegexUtils.isPhoneInvalid(phone)) {
             // 2.如果手机号不合法，返回错误信息
@@ -54,10 +54,13 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         }
         // 3.手机号合法，生成验证码
         String code = RandomUtil.randomNumbers(6);
-        // 4.将验证码保存至 session
-        session.setAttribute("code", code);
+        // 4.将验证码保存至redis
+        stringRedisTemplate.opsForValue().set(UserConstant.USER_CODE_KEY + phone, code);
+        stringRedisTemplate.expire(UserConstant.USER_CODE_KEY + phone,
+                UserConstant.USER_CODE_TTL, TimeUnit.MINUTES);
         // 5.发送验证码（短信功能待完成）
         log.info("发送短信验证码成功，验证码为：{}", code);
+        log.info(MessageConstant.CODE_TIME_MESSAGE);
         // 响应结果
         return Result.ok();
     }
@@ -68,7 +71,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
      * @return Result
      */
     @Override
-    public Result login(LoginFormDTO loginForm, HttpSession session) {
+    public Result login(LoginFormDTO loginForm) {
         // 1.校验手机号是否合法
         String phone = loginForm.getPhone();
         if (RegexUtils.isPhoneInvalid(phone)) {
@@ -77,10 +80,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         }
         // 3.校验验证码
             // 获取session中存储的验证码
-        Object cacheCode = session.getAttribute("code");
-            // 获取请求中发送的验证码
+        String cacheCode = stringRedisTemplate.opsForValue().get(UserConstant.USER_CODE_KEY + phone);
+        // 获取请求中发送的验证码
         String code = loginForm.getCode();
-        if (cacheCode == null || !cacheCode.toString().equals(code)) {
+        if (cacheCode == null || !cacheCode.equals(code)) {
             // 假如session中没有存储验证码或者验证码比对失败，直接返回
             return Result.fail(ErrorConstant.CODE_ERROR);
         }
