@@ -52,7 +52,7 @@ public class UserController {
     }
 
     /**
-     * 登出功能
+     * 用户登出功能
      * @return Result
      */
     @PostMapping("/logout")
