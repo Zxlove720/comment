@@ -14,7 +14,7 @@ import jakarta.servlet.http.HttpSession;
 
 /**
  * <p>
- * 前端控制器
+ * 用户相关controller
  * </p>
  *
  * @author wzb
