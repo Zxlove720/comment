@@ -13,7 +13,7 @@ import jakarta.annotation.Resource;
 
 /**
  * <p>
- * 前端控制器
+ * 店铺相关controller
  * </p>
  *
  * @author wzb
