@@ -17,7 +17,7 @@ import java.util.List;
 
 /**
  * <p>
- * 前端控制器
+ * 博客相关controller
  * </p>
  *
  * @author wzb
