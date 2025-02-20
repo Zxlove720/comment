@@ -47,9 +47,8 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
             return Result.fail("商户未找到");
         }
         // 查询成功，则将其加入缓存
-
-
-
-        return Result.ok();
+        stringRedisTemplate.opsForValue().set(ShopConstant.SHOP_CACHE_KEY + "id", JSONUtil.toJsonStr(shop));
+        // 返回商户信息
+        return Result.ok(shop);
     }
 }
