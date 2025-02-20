@@ -1,6 +1,7 @@
 package com.comment.service.impl;
 
 import cn.hutool.json.JSONUtil;
+import com.comment.constant.ErrorConstant;
 import com.comment.constant.ShopConstant;
 import com.comment.dto.Result;
 import com.comment.entity.Shop;
@@ -44,7 +45,7 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
         if (shop == null) {
             // 如果从数据库中查询失败，返回错误信息
             httpServletResponse.setStatus(404);
-            return Result.fail("商户未找到");
+            return Result.fail(ErrorConstant.SHOP_NOT_FOUND);
         }
         // 查询成功，则将其加入缓存
         stringRedisTemplate.opsForValue().set(ShopConstant.SHOP_CACHE_KEY + "id", JSONUtil.toJsonStr(shop));
