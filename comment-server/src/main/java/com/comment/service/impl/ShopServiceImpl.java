@@ -40,7 +40,7 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
             return Result.ok(shopCache);
         }
         // 缓存未命中，从数据库中查询
-        Shop shop = query().eq("id", id).one();
+        Shop shop = getById(id);
         if (shop == null) {
             // 如果从数据库中查询失败，返回错误信息
             httpServletResponse.setStatus(404);
