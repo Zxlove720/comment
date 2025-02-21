@@ -16,7 +16,7 @@ import org.springframework.stereotype.Service;
 
 /**
  * <p>
- * 服务实现类
+ * 商户服务类
  * </p>
  *
  * @author wzb
