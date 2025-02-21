@@ -19,7 +19,7 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * <p>
- * 商户服务类
+ * 店铺服务实现类
  * </p>
  *
  * @author wzb
@@ -33,10 +33,14 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
     @Resource
     private HttpServletResponse httpServletResponse;
 
-
+    /**
+     * 根据id查询店铺信息
+     * @param id 店铺id
+     * @return Result
+     */
     @Override
     public Result queryShopById(Long id) {
-        // 从缓存中查询商户
+        // 从缓存中查询店铺
         String shopJson = stringRedisTemplate.opsForValue().get(ShopConstant.SHOP_CACHE_KEY + id);
         if (StrUtil.isNotBlank(shopJson)) {
             // 命中缓存，直接返回
@@ -54,19 +58,19 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
         stringRedisTemplate.opsForValue().set(ShopConstant.SHOP_CACHE_KEY + id, JSONUtil.toJsonStr(shop));
         // 设置过期时间
         stringRedisTemplate.expire(ShopConstant.SHOP_CACHE_KEY + id, ShopConstant.SHOP_CACHE_TTL, TimeUnit.MINUTES);
-        // 返回商户信息
+        // 返回店铺信息
         return Result.ok(shop);
     }
 
     /**
-     * 修改商户信息
-     * @param shop 商户
+     * 修改店铺信息
+     * @param shop 店铺
      * @return Result
      */
     @Override
     @Transactional
     public Result updateShop(Shop shop) {
-        // 获取商户id
+        // 获取店铺id
         Long id = shop.getId();
         if (id == null) {
             return Result.fail(ErrorConstant.SHOP_NOT_FOUND);

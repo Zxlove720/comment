@@ -27,9 +27,9 @@ public class ShopController {
     public IShopService shopService;
 
     /**
-     * 根据id查询商铺信息
-     * @param id 商铺id
-     * @return 商铺详情数据
+     * 根据id查询店铺信息
+     * @param id 店铺id
+     * @return 店铺详情数据
      */
     @GetMapping("/{id}")
     public Result queryShopById(@PathVariable("id") Long id) {
@@ -37,9 +37,9 @@ public class ShopController {
     }
 
     /**
-     * 新增商铺信息
-     * @param shop 商铺数据
-     * @return 商铺id
+     * 新增店铺信息
+     * @param shop 店铺数据
+     * @return 店铺id
      */
     @PostMapping
     public Result saveShop(@RequestBody Shop shop) {
@@ -50,8 +50,8 @@ public class ShopController {
     }
 
     /**
-     * 更新商铺信息
-     * @param shop 商铺数据
+     * 更新店铺信息
+     * @param shop 店铺数据
      * @return Result
      */
     @PutMapping
@@ -60,10 +60,10 @@ public class ShopController {
     }
 
     /**
-     * 根据商铺类型分页查询商铺信息
-     * @param typeId 商铺类型
+     * 根据店铺类型分页查询店铺信息
+     * @param typeId 店铺类型
      * @param current 页码
-     * @return 商铺列表
+     * @return 店铺列表
      */
     @GetMapping("/of/type")
     public Result queryShopByType(
@@ -79,10 +79,10 @@ public class ShopController {
     }
 
     /**
-     * 根据商铺名称关键字分页查询商铺信息
-     * @param name 商铺名称关键字
+     * 根据店铺名称关键字分页查询店铺信息
+     * @param name 店铺名称关键字
      * @param current 页码
-     * @return 商铺列表
+     * @return 店铺列表
      */
     @GetMapping("/of/name")
     public Result queryShopByName(
