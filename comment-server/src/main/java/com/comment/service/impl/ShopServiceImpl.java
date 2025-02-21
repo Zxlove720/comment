@@ -1,5 +1,6 @@
 package com.comment.service.impl;
 
+import cn.hutool.core.util.RandomUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONUtil;
 import com.comment.constant.ErrorConstant;
@@ -63,7 +64,8 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
         // 查询成功，则将其加入缓存
         stringRedisTemplate.opsForValue().set(ShopConstant.SHOP_CACHE_KEY + id, JSONUtil.toJsonStr(shop));
         // 设置过期时间
-        stringRedisTemplate.expire(ShopConstant.SHOP_CACHE_KEY + id, ShopConstant.SHOP_CACHE_TTL, TimeUnit.MINUTES);
+        // 过期时间修改为随机值，解决缓存雪崩问题
+        stringRedisTemplate.expire(ShopConstant.SHOP_CACHE_KEY + id, RandomUtil.randomInt(15, 31), TimeUnit.MINUTES);
         // 返回店铺信息
         return Result.ok(shop);
     }
