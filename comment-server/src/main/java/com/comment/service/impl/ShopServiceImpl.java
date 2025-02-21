@@ -1,5 +1,6 @@
 package com.comment.service.impl;
 
+import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONUtil;
 import com.comment.constant.ErrorConstant;
 import com.comment.constant.ShopConstant;
@@ -16,7 +17,7 @@ import org.springframework.stereotype.Service;
 
 /**
  * <p>
- *  服务实现类
+ * 服务实现类
  * </p>
  *
  * @author wzb
@@ -27,7 +28,7 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
 
     @Resource
     private StringRedisTemplate stringRedisTemplate;
-    @Autowired
+    @Resource
     private HttpServletResponse httpServletResponse;
 
 
@@ -35,9 +36,9 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
     public Result queryShopById(Long id) {
         // 从缓存中查询商户
         String shopJson = stringRedisTemplate.opsForValue().get(ShopConstant.SHOP_CACHE_KEY + id);
-        Shop shopCache = JSONUtil.toBean(shopJson, Shop.class);
-        if (shopCache != null) {
+        if (StrUtil.isNotBlank(shopJson)) {
             // 命中缓存，直接返回
+            Shop shopCache = JSONUtil.toBean(shopJson, Shop.class);
             return Result.ok(shopCache);
         }
         // 缓存未命中，从数据库中查询
@@ -48,7 +49,7 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
             return Result.fail(ErrorConstant.SHOP_NOT_FOUND);
         }
         // 查询成功，则将其加入缓存
-        stringRedisTemplate.opsForValue().set(ShopConstant.SHOP_CACHE_KEY + "id", JSONUtil.toJsonStr(shop));
+        stringRedisTemplate.opsForValue().set(ShopConstant.SHOP_CACHE_KEY + id, JSONUtil.toJsonStr(shop));
         // 返回商户信息
         return Result.ok(shop);
     }
