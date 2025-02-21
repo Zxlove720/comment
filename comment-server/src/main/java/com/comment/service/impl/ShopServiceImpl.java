@@ -43,6 +43,11 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
         // 从缓存中查询店铺
         String shopJson = stringRedisTemplate.opsForValue().get(ShopConstant.SHOP_CACHE_KEY + id);
         if (StrUtil.isNotBlank(shopJson)) {
+            if (shopJson.equals("null")) {
+                // 缓存的店铺信息无效，直接返回错误
+                httpServletResponse.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                return Result.ok(ErrorConstant.SHOP_NOT_FOUND);
+            }
             // 命中缓存，直接返回
             Shop shopCache = JSONUtil.toBean(shopJson, Shop.class);
             return Result.ok(shopCache);
@@ -51,7 +56,8 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
         Shop shop = getById(id);
         if (shop == null) {
             // 如果从数据库中查询失败，返回错误信息
-            httpServletResponse.setStatus(404);
+            stringRedisTemplate.opsForValue().set(ShopConstant.SHOP_CACHE_KEY + id, "null");
+            httpServletResponse.setStatus(HttpServletResponse.SC_NOT_FOUND);
             return Result.fail(ErrorConstant.SHOP_NOT_FOUND);
         }
         // 查询成功，则将其加入缓存
