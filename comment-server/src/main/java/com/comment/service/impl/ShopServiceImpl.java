@@ -1,5 +1,6 @@
 package com.comment.service.impl;
 
+import cn.hutool.core.util.BooleanUtil;
 import cn.hutool.core.util.RandomUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONUtil;
@@ -36,6 +37,7 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
 
     /**
      * 根据id查询店铺信息
+     *
      * @param id 店铺id
      * @return Result
      */
@@ -53,25 +55,63 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
             Shop shopCache = JSONUtil.toBean(shopJson, Shop.class);
             return Result.ok(shopCache);
         }
-        // 缓存未命中，从数据库中查询
-        Shop shop = getById(id);
-        if (shop == null) {
-            // 如果从数据库中查询失败，返回错误信息
-            stringRedisTemplate.opsForValue().set(ShopConstant.SHOP_CACHE_KEY + id, "null");
-            httpServletResponse.setStatus(HttpServletResponse.SC_NOT_FOUND);
-            return Result.fail(ErrorConstant.SHOP_NOT_FOUND);
+        // 获取互斥锁
+        String lockKey = ShopConstant.SHOP_LOCK_KEY + id;
+        Shop shop = null;
+        try {
+            boolean lock = tryLock(lockKey);
+            // 判断获取锁是否成功
+            if (!lock) {
+                // 获取锁失败，休眠重试
+                Thread.sleep(50);
+                return queryShopById(id);
+            }
+            // 获取锁成功，从数据库中查询
+            shop = getById(id);
+            if (shop == null) {
+                // 如果从数据库中查询失败，返回错误信息，并将空值加入缓存
+                stringRedisTemplate.opsForValue().set(ShopConstant.SHOP_CACHE_KEY + id, "null");
+                httpServletResponse.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                return Result.fail(ErrorConstant.SHOP_NOT_FOUND);
+            }
+            // 查询成功，则将其加入缓存
+            stringRedisTemplate.opsForValue().set(ShopConstant.SHOP_CACHE_KEY + id, JSONUtil.toJsonStr(shop));
+            // 设置过期时间
+            // 过期时间修改为随机值，解决缓存雪崩问题
+            stringRedisTemplate.expire(ShopConstant.SHOP_CACHE_KEY + id, RandomUtil.randomInt(15, 31), TimeUnit.MINUTES);
+        } catch (Exception e) {
+            throw new RuntimeException();
+        } finally {
+            // 释放锁
+            unlock(lockKey);
         }
-        // 查询成功，则将其加入缓存
-        stringRedisTemplate.opsForValue().set(ShopConstant.SHOP_CACHE_KEY + id, JSONUtil.toJsonStr(shop));
-        // 设置过期时间
-        // 过期时间修改为随机值，解决缓存雪崩问题
-        stringRedisTemplate.expire(ShopConstant.SHOP_CACHE_KEY + id, RandomUtil.randomInt(15, 31), TimeUnit.MINUTES);
-        // 返回店铺信息
         return Result.ok(shop);
     }
 
     /**
+     * 获取锁
+     *
+     * @param key 锁
+     * @return boolean
+     */
+    private boolean tryLock(String key) {
+        Boolean flag = stringRedisTemplate.opsForValue().setIfAbsent(key, "1", 10, TimeUnit.SECONDS);
+        return BooleanUtil.isTrue(flag);
+    }
+
+    /**
+     * 释放锁
+     *
+     * @param key 锁
+     */
+    private void unlock(String key) {
+        stringRedisTemplate.delete(key);
+    }
+
+
+    /**
      * 修改店铺信息
+     *
      * @param shop 店铺
      * @return Result
      */
