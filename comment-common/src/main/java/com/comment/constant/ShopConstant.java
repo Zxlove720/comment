@@ -7,5 +7,7 @@ public class ShopConstant {
 
     public static final String SHOP_CACHE_KEY = "comment:shop:id";
 
+    public static final Long SHOP_CACHE_TTL = 30L;
+
 }
 

@@ -13,6 +13,9 @@ import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.concurrent.TimeUnit;
 
 /**
  * <p>
@@ -49,7 +52,29 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
         }
         // 查询成功，则将其加入缓存
         stringRedisTemplate.opsForValue().set(ShopConstant.SHOP_CACHE_KEY + id, JSONUtil.toJsonStr(shop));
+        // 设置过期时间
+        stringRedisTemplate.expire(ShopConstant.SHOP_CACHE_KEY + id, ShopConstant.SHOP_CACHE_TTL, TimeUnit.MINUTES);
         // 返回商户信息
         return Result.ok(shop);
+    }
+
+    /**
+     * 修改商户信息
+     * @param shop 商户
+     * @return Result
+     */
+    @Override
+    @Transactional
+    public Result updateShop(Shop shop) {
+        // 获取商户id
+        Long id = shop.getId();
+        if (id == null) {
+            return Result.fail(ErrorConstant.SHOP_NOT_FOUND);
+        }
+        // 更新数据库
+        updateById(shop);
+        // 删除缓存
+        stringRedisTemplate.delete(ShopConstant.SHOP_CACHE_KEY + id);
+        return Result.ok();
     }
 }
