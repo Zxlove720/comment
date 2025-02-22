@@ -165,7 +165,7 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
     /**
      * 缓存重建
      *
-     * @param id           店铺id
+     * @param id 店铺id
      * @param expireSecond 过期时间
      */
     private void saveShop2Redis(Long id, Long expireSecond) {
