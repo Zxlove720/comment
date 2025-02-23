@@ -3,7 +3,7 @@ package com.comment.utils;
 import cn.hutool.core.util.StrUtil;
 
 /**
- * @author 虎哥
+ * @author wzb
  */
 public class RegexUtils {
     /**
