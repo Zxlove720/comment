@@ -85,11 +85,12 @@ public class CacheClient {
         }
         // 判断命中的缓存是否为空值
         if (json != null) {
+            // 如果json不是null，但是isNotBlank方法为false，那么可以判断此时redis缓存的是空值
             // 返回错误信息
             httpServletResponse.setStatus(HttpServletResponse.SC_NOT_FOUND);
             return null;
         }
-        // 缓存存在，根据id查询数据库
+        // 缓存不存在，根据id查询数据库
         R r = dbFallback.apply(id);
         // 数据库不存在，返回错误
         if (r == null) {
