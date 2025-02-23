@@ -24,7 +24,7 @@ import java.util.function.Function;
  */
 @Slf4j
 @Component
-public class CacheUtils {
+public class CacheClient {
 
     @Resource
     private StringRedisTemplate stringRedisTemplate;
