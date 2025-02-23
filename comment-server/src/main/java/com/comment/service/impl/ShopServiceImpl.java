@@ -10,6 +10,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.comment.utils.CacheClient;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,6 +25,7 @@ import java.util.concurrent.TimeUnit;
  * @author wzb
  * @since 2025-2-12
  */
+@Slf4j
 @Service
 public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IShopService {
 
@@ -54,7 +56,6 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
 
     /**
      * 修改店铺信息
-     *
      * @param shop 店铺
      * @return Result
      */
@@ -64,10 +65,13 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
         // 获取店铺id
         Long id = shop.getId();
         if (id == null) {
+            log.info(ErrorConstant.SHOP_NOT_FOUND);
+            httpServletResponse.setStatus(HttpServletResponse.SC_NOT_FOUND);
             return Result.fail(ErrorConstant.SHOP_NOT_FOUND);
         }
         // 更新数据库
         updateById(shop);
+        log.info(ShopConstant.SHOP_UPDATE_SUCCESSFULLY);
         // 删除缓存
         stringRedisTemplate.delete(ShopConstant.SHOP_CACHE_KEY + id);
         return Result.ok();
