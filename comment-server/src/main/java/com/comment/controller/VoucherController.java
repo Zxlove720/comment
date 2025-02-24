@@ -10,7 +10,7 @@ import jakarta.annotation.Resource;
 
 /**
  * <p>
- *  前端控制器
+ *  优惠券相关controller
  * </p>
  *
  * @author wzb
