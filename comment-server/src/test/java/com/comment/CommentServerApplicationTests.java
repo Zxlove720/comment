@@ -1,7 +1,6 @@
 package com.comment;
 
-import com.comment.utils.redis.RedisWork;
-import org.apache.catalina.Executor;
+import com.comment.utils.id.GlobalIDCreator;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -14,7 +13,7 @@ import java.util.concurrent.Executors;
 class CommentServerApplicationTests {
 
     @Autowired
-    private RedisWork redisWork;
+    private GlobalIDCreator redisWork;
 
     private final ExecutorService executorService = Executors.newFixedThreadPool(100);
 

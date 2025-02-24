@@ -1,4 +1,4 @@
-package com.comment.utils.redis;
+package com.comment.utils.id;
 
 
 import jakarta.annotation.Resource;
@@ -13,7 +13,7 @@ import java.time.format.DateTimeFormatter;
  * 全局唯一ID生成器
  */
 @Component
-public class RedisWork {
+public class GlobalIDCreator {
 
     // 开始时间戳
     private static final long BEGIN_TIMESTAMP = 1097712000L;
