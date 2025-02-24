@@ -14,7 +14,7 @@ import com.comment.dto.UserDTO;
 import com.comment.entity.User;
 import com.comment.mapper.UserMapper;
 import com.comment.service.IUserService;
-import com.comment.utils.RegexUtils;
+import com.comment.utils.regex.RegexUtils;
 import com.comment.utils.UserHolder;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;

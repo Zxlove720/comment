@@ -7,7 +7,7 @@ import com.comment.entity.Shop;
 import com.comment.mapper.ShopMapper;
 import com.comment.service.IShopService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.comment.utils.CacheClient;
+import com.comment.utils.cache.CacheClient;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;

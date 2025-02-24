@@ -1,4 +1,4 @@
-package com.comment.utils;
+package com.comment.utils.regex;
 
 /**
  * @author wzb
