@@ -79,9 +79,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
             return Result.fail(ErrorConstant.PHONE_NUMBER_ERROR);
         }
         // 3.校验验证码
-            // 获取session中存储的验证码
+            // 获取redis中存储的验证码
         String cacheCode = stringRedisTemplate.opsForValue().get(UserConstant.USER_CODE_KEY + phone);
-        // 获取请求中发送的验证码
+            // 获取请求中发送的验证码
         String code = loginForm.getCode();
         if (cacheCode == null || !cacheCode.equals(code)) {
             // 假如session中没有存储验证码或者验证码比对失败，直接返回
