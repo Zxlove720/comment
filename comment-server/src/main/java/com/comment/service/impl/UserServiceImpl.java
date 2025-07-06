@@ -17,6 +17,7 @@ import com.comment.service.IUserService;
 import com.comment.utils.regex.RegexUtils;
 import com.comment.utils.UserHolder;
 import jakarta.annotation.Resource;
+import jakarta.servlet.http.HttpSession;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
@@ -46,7 +47,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
      * @return Result
      */
     @Override
-    public Result sendCode(String phone) {
+    public Result sendCode(String phone, HttpSession session) {
         // 1.校验手机号是否合法
         if (RegexUtils.isPhoneInvalid(phone)) {
             // 2.如果手机号不合法，返回错误信息
