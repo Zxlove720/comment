@@ -50,8 +50,9 @@ public class UserController {
      * @return Result
      */
     @PostMapping("/login")
-    public Result login(@RequestBody LoginFormDTO loginForm, HttpSession session){
-        return userService.login(loginForm);
+    public Result<Void> login(@RequestBody LoginFormDTO loginForm, HttpSession session){
+        userService.login(loginForm, session);
+        return Result.ok();
     }
 
     /**

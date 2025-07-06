@@ -16,7 +16,7 @@ import jakarta.servlet.http.HttpSession;
  */
 public interface IUserService extends IService<User> {
 
-    Result login(LoginFormDTO loginForm);
+    void login(LoginFormDTO loginForm, HttpSession session);
 
     void sendCode(String phone, HttpSession session);
 
