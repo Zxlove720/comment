@@ -20,10 +20,21 @@ public class Result<T> {
     private T data;
     private Long total;
 
+    /**
+     * 不带数据成功请求
+     *
+     * @return Result 响应结果
+     */
     public static <T> Result<T> ok(){
         return new Result<>(true, null, null, null);
     }
 
+    /**
+     *
+     * 带数据成功请求
+     * @param data 响应数据
+     * @return Result 响应结果
+     */
     public static <T> Result<T> ok(T data){
         return new Result<>(true, null, data, null);
     }
