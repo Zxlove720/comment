@@ -43,15 +43,15 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
 
     /**
      * 发送手机验证码
+     *
      * @param phone 手机号
-     * @return Result
      */
     @Override
-    public Result sendCode(String phone, HttpSession session) {
+    public void sendCode(String phone, HttpSession session) {
         // 1.校验手机号是否合法
         if (RegexUtils.isPhoneInvalid(phone)) {
             // 2.如果手机号不合法，返回错误信息
-            return Result.fail(ErrorConstant.PHONE_NUMBER_ERROR);
+            throw new RuntimeException(ErrorConstant.PHONE_NUMBER_ERROR);
         }
         // 3.手机号合法，生成验证码
         String code = RandomUtil.randomNumbers(6);
@@ -60,8 +60,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         // 5.发送验证码（短信功能待完成）
         log.info("发送短信验证码成功，验证码为：{}", code);
         log.info(MessageConstant.CODE_TIME_MESSAGE);
-        // 响应结果
-        return Result.ok();
     }
 
     /**
