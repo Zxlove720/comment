@@ -33,11 +33,13 @@ public class UserController {
 
     /**
      * 发送手机验证码
-     * @param phone 手机号
+     *
+     * @param phone   手机号
+     * @param session
      * @return Result
      */
     @PostMapping("code")
-    public Result sendCode(@RequestParam("phone") String phone) {
+    public Result sendCode(@RequestParam("phone") String phone, HttpSession session) {
         return userService.sendCode(phone);
     }
 
