@@ -66,7 +66,7 @@ public class UserController {
     }
 
     @GetMapping("/me")
-    public Result me(){
+    public Result<Void> me(){
        return userService.me();
     }
 
