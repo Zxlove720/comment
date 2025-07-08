@@ -1,7 +1,6 @@
 package com.comment.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
-import cn.hutool.core.bean.copier.CopyOptions;
 import cn.hutool.core.lang.UUID;
 import cn.hutool.core.util.RandomUtil;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -22,7 +21,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -64,10 +62,12 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
 
     /**
      * 用户登录
+     *
      * @param loginForm 登录参数，包含手机号、验证码；或者手机号、密码
+     * @return
      */
     @Override
-    public void login(LoginFormDTO loginForm, HttpSession session) {
+    public String login(LoginFormDTO loginForm) {
         // 1.校验手机号是否合法
         String phone = loginForm.getPhone();
         if (RegexUtils.isPhoneInvalid(phone)) {
@@ -75,23 +75,29 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
             throw new RuntimeException(ErrorConstant.PHONE_NUMBER_ERROR);
         }
         // 3.校验验证码
-            // 获取Session中存储的验证码
-        String cacheCode = (String)session.getAttribute("code");
-        // 获取请求中发送的验证码
+        // 3.1获取Redis中存储的验证码
+        String cacheCode = stringRedisTemplate.opsForValue().get(UserConstant.USER_CODE_KEY + phone);
+        // 3.2获取请求中发送的验证码
         String code = loginForm.getCode();
         if (cacheCode == null || !cacheCode.equals(code)) {
             // 假如session中没有存储验证码或者验证码比对失败，直接返回
             throw new RuntimeException(ErrorConstant.CODE_ERROR);
         }
-        // 4.验证码校验成功，根据手机号查询用户 Mybatis-plus
+        // 4.验证码校验成功，根据手机号查询用户
         User user = query().eq("phone", phone).one();
         // 5.判断用户是否存在
         if (user == null) {
             // 6.用户不存在，那么创建用户
             user = createUserWithPhone(phone);
         }
-        // 7.将用户信息保存到Session中
-        session.setAttribute("user", user);
+        // 7.将User对象转换为UserDTO对象然后保存到Redis
+        // 7.1生成登录用token
+        String token = UUID.randomUUID(false).toString();
+        // 7.2将User对象转换为UserDTO，然后转换为userMap方便Hash类型操作
+        Map<String, Object> userMap = BeanUtil.beanToMap(BeanUtil.copyProperties(user, UserDTO.class));
+        stringRedisTemplate.opsForHash().putAll(UserConstant.USER_LOGIN_KEY + token, userMap);
+        // 8.返回token用做登录凭证
+        return token;
     }
 
     /**
