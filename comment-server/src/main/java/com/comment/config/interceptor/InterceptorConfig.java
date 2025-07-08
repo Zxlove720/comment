@@ -20,7 +20,7 @@ public class InterceptorConfig implements WebMvcConfigurer {
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         // 登录拦截器
-        registry.addInterceptor(new LoginInterceptor(stringRedisTemplate))
+        registry.addInterceptor(new LoginInterceptor())
                 .excludePathPatterns(
                         "/shop/**",
                         "/voucher/**",
@@ -31,8 +31,8 @@ public class InterceptorConfig implements WebMvcConfigurer {
                         "/user/login"
                 ).order(1);
 
-//        registry.addInterceptor(new RefreshTokenInterceptor(stringRedisTemplate))
-//                .order(0);
+        registry.addInterceptor(new RefreshTokenInterceptor(stringRedisTemplate))
+                .order(0);
     }
 
 }

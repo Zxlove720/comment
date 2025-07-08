@@ -22,14 +22,14 @@ public class RefreshTokenInterceptor implements HandlerInterceptor {
     }
 
     /**
-     * 刷新token拦截器
+     * 用户登录状态刷新拦截器
      */
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object hanlder) throws Exception {
         // 1.获取请求头中的token
         String token = request.getHeader("authorization");
         if (StrUtil.isBlank(token)) {
-            // 如果没有请求头，直接放行到下一个拦截器
+            // 1.1如果没有请求头，直接放行到下一个拦截器
             return true;
         }
         // 2.基于token获取redis中的用户
@@ -37,10 +37,10 @@ public class RefreshTokenInterceptor implements HandlerInterceptor {
         Map<Object, Object> userMap = stringRedisTemplate.opsForHash().entries(key);
         // 3.判断用户是否存在
         if (userMap.isEmpty()) {
-            // 如果用户不存在，直接放行至下一个拦截器
+            // 3.1如果用户不存在，直接放行至下一个拦截器
             return true;
         }
-        // 4.将查询到的hash数据转换为UserDTO对象
+        // 4.将查询到的Hash数据转换为UserDTO对象
         UserDTO userDTO = BeanUtil.fillBeanWithMap(userMap, new UserDTO(), false);
         // 5.保存用户信息到ThreadLocal
         UserHolder.saveUser(userDTO);
@@ -58,4 +58,5 @@ public class RefreshTokenInterceptor implements HandlerInterceptor {
         // 移除用户
         UserHolder.removeUser();
     }
+
 }
