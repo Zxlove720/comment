@@ -10,7 +10,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.annotation.Resource;
-import jakarta.servlet.http.HttpSession;
 
 /**
  * <p>
@@ -35,12 +34,11 @@ public class UserController {
      * 发送手机验证码
      *
      * @param phone   手机号
-     * @param session
      * @return Result
      */
     @PostMapping("code")
-    public Result<Void> sendCode(@RequestParam("phone") String phone, HttpSession session) {
-        userService.sendCode(phone, session);
+    public Result<Void> sendCode(@RequestParam("phone") String phone) {
+        userService.sendCode(phone);
         return Result.ok();
     }
 
