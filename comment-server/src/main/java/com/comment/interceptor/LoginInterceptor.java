@@ -1,12 +1,16 @@
 package com.comment.interceptor;
 
+import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.StrUtil;
-import com.comment.entity.User;
+import com.comment.constant.UserConstant;
+import com.comment.dto.UserDTO;
 import com.comment.utils.UserHolder;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.web.servlet.HandlerInterceptor;
+
+import java.util.Map;
 
 public class LoginInterceptor implements HandlerInterceptor {
 
@@ -31,14 +35,17 @@ public class LoginInterceptor implements HandlerInterceptor {
             return false;
         }
         // 2.有token，从Redis中获取用户信息
-
-        // 判断是否有用户信息
-        if (user == null) {
-            // 如果没有用户信息，则返回未登录
+        Map<Object, Object> userMap = stringRedisTemplate.opsForHash().entries(UserConstant.USER_LOGIN_KEY + token);
+        // 2.1判断是否有用户信息
+        if (userMap.isEmpty()) {
+            // 2.2如果没有用户信息，则返回未登录
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            return false;
         }
+        // 3.将Redis中存储的userMap转换为UserDTO对象
+        UserDTO userDTO = BeanUtil.fillBeanWithMap(userMap, new UserDTO(), false);
         // 如果有用户信息，则将用户信息保存到ThreadLocal
-        UserHolder.saveUser(user);
+        UserHolder.saveUser(userDTO);
         return true;
     }
 

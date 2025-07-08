@@ -3,9 +3,11 @@ package com.comment.controller;
 
 import com.comment.dto.LoginFormDTO;
 import com.comment.dto.Result;
+import com.comment.entity.User;
 import com.comment.entity.UserInfo;
 import com.comment.service.IUserInfoService;
 import com.comment.service.IUserService;
+import com.comment.utils.UserHolder;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
@@ -64,8 +66,9 @@ public class UserController {
     }
 
     @GetMapping("/me")
-    public Result<Void> me(){
-       return userService.me();
+    public Result<User> me(){
+        User user = userService.query().eq("id", UserHolder.getUser().getId()).one();
+        return Result.ok(user);
     }
 
     @GetMapping("/info/{id}")
