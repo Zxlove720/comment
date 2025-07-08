@@ -19,6 +19,4 @@ public interface IUserService extends IService<User> {
 
     void sendCode(String phone);
 
-    Result me();
-
 }

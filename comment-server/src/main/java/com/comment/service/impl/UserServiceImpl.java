@@ -9,13 +9,11 @@ import com.comment.constant.ErrorConstant;
 import com.comment.constant.MessageConstant;
 import com.comment.constant.UserConstant;
 import com.comment.dto.LoginFormDTO;
-import com.comment.dto.Result;
 import com.comment.dto.UserDTO;
 import com.comment.entity.User;
 import com.comment.mapper.UserMapper;
 import com.comment.service.IUserService;
 import com.comment.utils.regex.RegexUtils;
-import com.comment.utils.UserHolder;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -122,8 +120,4 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         return user;
     }
 
-    @Override
-    public Result me() {
-        return Result.ok(query().eq("id", UserHolder.getUser().getId()).one());
-    }
 }

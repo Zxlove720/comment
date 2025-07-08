@@ -14,7 +14,7 @@ import java.util.Map;
 
 public class LoginInterceptor implements HandlerInterceptor {
 
-    private StringRedisTemplate stringRedisTemplate;
+    private final StringRedisTemplate stringRedisTemplate;
 
     public LoginInterceptor(StringRedisTemplate stringRedisTemplate) {
         this.stringRedisTemplate = stringRedisTemplate;
@@ -26,7 +26,7 @@ public class LoginInterceptor implements HandlerInterceptor {
      * @param response 响应
      */
     @Override
-    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
+    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
         // 1.从请求头中获取token
         String token = request.getHeader("authorization");
         if (StrUtil.isBlank(token)) {
@@ -44,13 +44,13 @@ public class LoginInterceptor implements HandlerInterceptor {
         }
         // 3.将Redis中存储的userMap转换为UserDTO对象
         UserDTO userDTO = BeanUtil.fillBeanWithMap(userMap, new UserDTO(), false);
-        // 如果有用户信息，则将用户信息保存到ThreadLocal
+        // 4.将UserDTO保存到ThreadLocal，方便后续使用用户信息
         UserHolder.saveUser(userDTO);
         return true;
     }
 
     @Override
-    public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) throws Exception {
+    public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) {
         // 当请求完成后，从ThreadLocal中删除用户信息
         UserHolder.removeUser();
     }
