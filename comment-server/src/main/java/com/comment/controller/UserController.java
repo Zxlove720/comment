@@ -65,6 +65,11 @@ public class UserController {
         return Result.fail("功能未完成");
     }
 
+    /**
+     * 用户个人信息查询
+     * 
+     * @return
+     */
     @GetMapping("/me")
     public Result<User> me(){
         User user = userService.query().eq("id", UserHolder.getUser().getId()).one();
