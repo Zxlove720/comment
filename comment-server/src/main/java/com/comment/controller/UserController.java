@@ -68,7 +68,7 @@ public class UserController {
     /**
      * 用户个人信息查询
      *
-     * @return
+     * @return User User实体类
      */
     @GetMapping("/me")
     public Result<User> me(){
