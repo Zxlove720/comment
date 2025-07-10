@@ -79,7 +79,7 @@ public class UserController {
     /**
      * 查看用户信息
      *
-     * @param userId
+     * @param userId 用户id
      * @return
      */
     @GetMapping("/info/{id}")
