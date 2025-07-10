@@ -80,7 +80,7 @@ public class UserController {
      * 查看用户信息
      *
      * @param userId 用户id
-     * @return
+     * @return Result<UserInfo>
      */
     @GetMapping("/info/{id}")
     public Result<UserInfo> info(@PathVariable("id") Long userId){
