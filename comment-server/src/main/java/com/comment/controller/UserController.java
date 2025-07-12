@@ -71,7 +71,7 @@ public class UserController {
      */
     @GetMapping("/me")
     public Result<User> me(){
-        // 
+        //
         User user = userService.query().eq("id", UserHolder.getUser().getId()).one();
         return Result.ok(user);
     }
