@@ -71,7 +71,7 @@ public class UserController {
      */
     @GetMapping("/me")
     public Result<User> me(){
-        //
+        // MyBatisPlus查询用户信息
         User user = userService.query().eq("id", UserHolder.getUser().getId()).one();
         return Result.ok(user);
     }
