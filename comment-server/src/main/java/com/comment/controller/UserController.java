@@ -90,7 +90,7 @@ public class UserController {
             // 没有详情，应该是第一次查看详情
             return Result.ok();
         }
-        //
+        // 设置创建时间 
         info.setCreateTime(null);
         info.setUpdateTime(null);
         // 返回
