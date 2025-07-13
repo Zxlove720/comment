@@ -92,6 +92,7 @@ public class UserController {
         }
         // 设置创建时间
         info.setCreateTime(null);
+        // 设置更新时间
         info.setUpdateTime(null);
         // 返回
         return Result.ok(info);
