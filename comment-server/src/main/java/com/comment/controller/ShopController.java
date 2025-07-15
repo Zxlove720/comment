@@ -43,7 +43,7 @@ public class ShopController {
      * @return 店铺id
      */
     @PostMapping
-    public Result saveShop(@RequestBody Shop shop) {
+    public Result<Long> saveShop(@RequestBody Shop shop) {
         // 写入数据库
         shopService.save(shop);
         // 返回店铺id
