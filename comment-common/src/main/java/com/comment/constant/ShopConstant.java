@@ -5,7 +5,7 @@ package com.comment.constant;
  */
 public class ShopConstant {
 
-    public static final String SHOP_CACHE_KEY = "comment:cache:shop:id";
+    public static final String SHOP_CACHE_KEY = "comment:cache:shop:id:";
 
     public static final String SHOP_LOCK_KEY = "comment:shop:lock:";
 

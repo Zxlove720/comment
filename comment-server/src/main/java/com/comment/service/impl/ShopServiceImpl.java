@@ -1,5 +1,7 @@
 package com.comment.service.impl;
 
+import cn.hutool.core.util.StrUtil;
+import cn.hutool.json.JSONUtil;
 import com.comment.constant.ErrorConstant;
 import com.comment.constant.ShopConstant;
 import com.comment.entity.Shop;
@@ -43,13 +45,22 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
      */
     @Override
     public Shop queryShopById(Long id) {
-        // 解决缓存穿透
-        Shop shop = cacheClient.queryWithPassThrough(ShopConstant.SHOP_CACHE_KEY, id, Shop.class,
-                this::getById, ShopConstant.SHOP_CACHE_TTL, TimeUnit.MINUTES);
+        // 1.先从Redis中获取店铺信息
+        String shopJson = stringRedisTemplate.opsForValue().get(ShopConstant.SHOP_CACHE_KEY + id);
+        if (StrUtil.isNotBlank(shopJson)) {
+            // 1.2如果Redis中有对应缓存，直接返回
+            return JSONUtil.toBean(shopJson, Shop.class);
+        }
+        // 2.此时Redis中没有对应缓存，需要查询数据库
+        Shop shop = getById(id);
         if (shop == null) {
-            httpServletResponse.setStatus(HttpServletResponse.SC_NOT_FOUND);
+            // 2.1如果数据库中没有对应店铺信息，则报错
             throw new RuntimeException(ErrorConstant.SHOP_NOT_FOUND);
         }
+        // 3.数据库中有对应的商户信息，需要将其加入Redis
+        stringRedisTemplate.opsForValue().set(ShopConstant.SHOP_CACHE_KEY + id, JSONUtil.toJsonStr(shop),
+                ShopConstant.SHOP_CACHE_TTL, TimeUnit.MINUTES);
+        // 4.返回商户信息
         return shop;
     }
 
