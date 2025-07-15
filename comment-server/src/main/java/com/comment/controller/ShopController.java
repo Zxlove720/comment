@@ -32,8 +32,9 @@ public class ShopController {
      * @return 店铺详情数据
      */
     @GetMapping("/{id}")
-    public Result queryShopById(@PathVariable("id") Long id) {
-        return shopService.queryShopById(id);
+    public Result<Shop> queryShopById(@PathVariable("id") Long id) {
+        Shop shop = shopService.queryShopById(id);
+        return Result.ok(shop);
     }
 
     /**

@@ -43,15 +43,15 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
      * @return Result
      */
     @Override
-    public Result queryShopById(Long id) {
+    public Shop queryShopById(Long id) {
         // 解决缓存穿透
         Shop shop = cacheClient.queryWithPassThrough(ShopConstant.SHOP_CACHE_KEY, id, Shop.class,
                 this::getById, ShopConstant.SHOP_CACHE_TTL, TimeUnit.MINUTES);
         if (shop == null) {
             httpServletResponse.setStatus(HttpServletResponse.SC_NOT_FOUND);
-            return Result.fail(ErrorConstant.SHOP_NOT_FOUND);
+            throw new RuntimeException(ErrorConstant.SHOP_NOT_FOUND);
         }
-        return Result.ok(shop);
+        return shop;
     }
 
     /**
