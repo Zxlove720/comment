@@ -56,8 +56,9 @@ public class ShopController {
      * @return Result
      */
     @PutMapping()
-    public Result updateShop(@RequestBody Shop shop) {
-        return shopService.updateShop(shop);
+    public Result<Void> updateShop(@RequestBody Shop shop) {
+        shopService.updateShop(shop);
+        return Result.ok();
     }
 
     /**

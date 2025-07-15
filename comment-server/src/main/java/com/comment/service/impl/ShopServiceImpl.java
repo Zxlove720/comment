@@ -2,7 +2,6 @@ package com.comment.service.impl;
 
 import com.comment.constant.ErrorConstant;
 import com.comment.constant.ShopConstant;
-import com.comment.dto.Result;
 import com.comment.entity.Shop;
 import com.comment.mapper.ShopMapper;
 import com.comment.service.IShopService;
@@ -56,24 +55,23 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
 
     /**
      * 修改店铺信息
+     *
      * @param shop 店铺
-     * @return Result
      */
     @Override
     @Transactional
-    public Result updateShop(Shop shop) {
+    public void updateShop(Shop shop) {
         // 获取店铺id
         Long id = shop.getId();
         if (id == null) {
             log.info(ErrorConstant.SHOP_NOT_FOUND);
             httpServletResponse.setStatus(HttpServletResponse.SC_NOT_FOUND);
-            return Result.fail(ErrorConstant.SHOP_NOT_FOUND);
+            throw new RuntimeException(ErrorConstant.SHOP_NOT_FOUND);
         }
         // 更新数据库
         updateById(shop);
         log.info(ShopConstant.SHOP_UPDATE_SUCCESSFULLY);
         // 删除缓存
         stringRedisTemplate.delete(ShopConstant.SHOP_CACHE_KEY + id);
-        return Result.ok();
     }
 }

@@ -1,6 +1,5 @@
 package com.comment.service;
 
-import com.comment.dto.Result;
 import com.comment.entity.Shop;
 import com.baomidou.mybatisplus.extension.service.IService;
 
@@ -16,5 +15,5 @@ public interface IShopService extends IService<Shop> {
 
     Shop queryShopById(Long id);
 
-    Result updateShop(Shop shop);
+    void updateShop(Shop shop);
 }
