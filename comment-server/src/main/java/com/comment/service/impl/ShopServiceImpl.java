@@ -72,17 +72,15 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
     @Override
     @Transactional
     public void updateShop(Shop shop) {
-        // 获取店铺id
-        Long id = shop.getId();
-        if (id == null) {
-            log.info(ErrorConstant.SHOP_NOT_FOUND);
-            httpServletResponse.setStatus(HttpServletResponse.SC_NOT_FOUND);
-            throw new RuntimeException(ErrorConstant.SHOP_NOT_FOUND);
+        // 1.获取店铺id并判断是否存在
+        Long shopId = shop.getId();
+        if (shopId == null) {
+            // 1.2店铺id为null，抛出异常
+            throw new RuntimeException(ErrorConstant.SHOP_ID_IS_NULL);
         }
-        // 更新数据库
+        // 2.更新店铺信息
         updateById(shop);
-        log.info(ShopConstant.SHOP_UPDATE_SUCCESSFULLY);
-        // 删除缓存
-        stringRedisTemplate.delete(ShopConstant.SHOP_CACHE_KEY + id);
+        // 3.删除缓存
+        stringRedisTemplate.delete(ShopConstant.SHOP_CACHE_KEY + shopId);
     }
 }

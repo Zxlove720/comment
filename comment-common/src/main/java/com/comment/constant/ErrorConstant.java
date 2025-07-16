@@ -9,7 +9,9 @@ public class ErrorConstant {
 
     public static final String CODE_ERROR = "验证码错误";
 
-    public static final String SHOP_NOT_FOUND = "商户未找到";
+    public static final String SHOP_NOT_FOUND = "店铺未找到";
+
+    public static final String SHOP_ID_IS_NULL = "店铺id为空";
 
     public static final String VOUCHER_NOT_START = "秒杀尚未开始";
 
