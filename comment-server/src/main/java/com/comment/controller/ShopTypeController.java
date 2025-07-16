@@ -13,15 +13,16 @@ import java.util.List;
 
 /**
  * <p>
- * 前端控制器
+ * 店铺类型Controller
  * </p>
  *
  * @author wzb
- * @since 2025-2-12
+ * @since 2025-7-1
  */
 @RestController
 @RequestMapping("/shop-type")
 public class ShopTypeController {
+
     @Resource
     private IShopTypeService typeService;
 

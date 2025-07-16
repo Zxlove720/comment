@@ -17,7 +17,7 @@ import jakarta.annotation.Resource;
  * </p>
  *
  * @author wzb
- * @since 2025-2-12
+ * @since 2025-7-1
  */
 @RestController
 @RequestMapping("/shop")
