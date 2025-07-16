@@ -15,7 +15,7 @@ import java.util.List;
 
 /**
  * <p>
- *  店铺类型服务实现类
+ * 店铺类型服务实现类
  * </p>
  *
  * @author wzb
@@ -44,7 +44,9 @@ public class ShopTypeServiceImpl extends ServiceImpl<ShopTypeMapper, ShopType> i
         // 2.缓存中没有店铺类型，从数据库中查询
         List<ShopType> shopTypes = query().orderByAsc("sort").list();
         // 2.1将数据库中查询的信息缓存到Redis中
-        stringRedisTemplate.opsForList().leftPushAll(ShopTypeConstant.SHOP_TYPE_CACHE, String.valueOf(shopTypes));
+        for (ShopType shopType : shopTypes) {
+            stringRedisTemplate.opsForList().rightPush(ShopTypeConstant.SHOP_TYPE_CACHE, JSONUtil.toJsonStr(shopType));
+        }
         return shopTypes;
     }
 }
