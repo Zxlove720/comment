@@ -33,7 +33,7 @@ public class ShopTypeServiceImpl extends ServiceImpl<ShopTypeMapper, ShopType> i
         // 1.先从缓存中查询店铺类型
         List<String> shopTypeJson = stringRedisTemplate.opsForList().range(ShopTypeConstant.SHOP_TYPE_CACHE, 0, -1);
         List<ShopType> shopTypeList = new ArrayList<>();
-        if (shopTypeJson != null) {
+        if (shopTypeJson != null && !shopTypeJson.isEmpty()) {
             // 1.2缓存中有店铺类型信息，直接返回
             for (String shop : shopTypeJson) {
                 ShopType shopType = JSONUtil.toBean(shop, ShopType.class);

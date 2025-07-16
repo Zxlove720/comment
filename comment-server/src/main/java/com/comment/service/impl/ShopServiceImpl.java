@@ -51,11 +51,17 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
             // 1.2如果Redis中有对应缓存，直接返回
             return JSONUtil.toBean(shopJson, Shop.class);
         }
+        // 此时shopJson只能是null或者空串
+        if (shopJson != null) {
+            // 1.3shopJson是空串，是解决缓存穿透缓存的空值
+            throw new RuntimeException(ErrorConstant.SHOP_NOT_FOUND);
+        }
         // 2.此时Redis中没有对应缓存，需要查询数据库
         Shop shop = getById(id);
         if (shop == null) {
-            // 2.1如果数据库中没有对应店铺信息，则报错
-            throw new RuntimeException(ErrorConstant.SHOP_NOT_FOUND);
+            // 2.1如果数据库中没有对应店铺信息，则将其缓存为空值解决缓存穿透
+            stringRedisTemplate.opsForValue().set(ShopConstant.SHOP_CACHE_KEY + id, "",
+                    ShopConstant.SHOP_NULL_TTL, TimeUnit.MINUTES);
         }
         // 3.数据库中有对应的商户信息，需要将其加入Redis
         stringRedisTemplate.opsForValue().set(ShopConstant.SHOP_CACHE_KEY + id, JSONUtil.toJsonStr(shop),
