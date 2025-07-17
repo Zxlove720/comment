@@ -29,7 +29,7 @@ public class ShopTypeServiceImpl extends ServiceImpl<ShopTypeMapper, ShopType> i
 
     /**
      * 查询店铺类型
-     * @return List<ShopType>
+     * @return List<ShopType> 店铺类型列表
      */
     @Override
     public List<ShopType> getShopType() {
