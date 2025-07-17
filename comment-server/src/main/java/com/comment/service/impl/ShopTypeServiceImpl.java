@@ -27,7 +27,10 @@ public class ShopTypeServiceImpl extends ServiceImpl<ShopTypeMapper, ShopType> i
     @Resource
     private StringRedisTemplate stringRedisTemplate;
 
-
+    /**
+     * 
+     * @return
+     */
     @Override
     public List<ShopType> getShopType() {
         // 1.先从缓存中查询店铺类型
