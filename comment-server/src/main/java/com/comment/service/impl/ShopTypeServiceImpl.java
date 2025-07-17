@@ -28,7 +28,7 @@ public class ShopTypeServiceImpl extends ServiceImpl<ShopTypeMapper, ShopType> i
     private StringRedisTemplate stringRedisTemplate;
 
     /**
-     * 
+     * 查询店铺类型
      * @return
      */
     @Override
