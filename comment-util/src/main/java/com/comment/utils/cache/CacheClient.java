@@ -111,7 +111,7 @@ public class CacheClient {
             // 2.6查询结果不为空，将其接入Redis重建缓存
             this.addCache(key, result, time, timeUnit);
         } catch (InterruptedException e) {
-            e.printStackTrace();
+            log.error("error:", e);
         } finally {
             unLock(ShopConstant.SHOP_LOCK_KEY + suffix);
         }
