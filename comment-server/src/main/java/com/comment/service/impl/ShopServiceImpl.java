@@ -101,7 +101,10 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
      */
     private Shop doubleCheck(String key) {
         String shopJson = stringRedisTemplate.opsForValue().get(key);
-        return shopJson == null ? null : JSONUtil.toBean(shopJson, Shop.class);
+        if (StrUtil.isBlank(shopJson)) {
+            return null;
+        }
+        return JSONUtil.toBean(shopJson, Shop.class);
     }
 
     /**
