@@ -20,168 +20,126 @@ import java.util.function.Function;
 
 /**
  * 缓存工具类
+ *
  * @author wzb
  */
 @Slf4j
 @Component
 public class CacheClient {
 
-    @Resource
-    private StringRedisTemplate stringRedisTemplate;
+    private final StringRedisTemplate stringRedisTemplate;
 
-    @Resource
-    private HttpServletResponse httpServletResponse;
-
-    /**
-     * Java对象存储到Redis
-     * @param key 键
-     * @param value 值
-     * @param time 过期时间
-     * @param unit 时间单位
-     */
-    public void set(String key, Object value, Long time, TimeUnit unit) {
-        stringRedisTemplate.opsForValue().set(key, JSONUtil.toJsonStr(value), time, unit);
+    public CacheClient(StringRedisTemplate stringRedisTemplate) {
+        this.stringRedisTemplate = stringRedisTemplate;
     }
 
     /**
-     * Java对象存储到Redis并添加逻辑过期时间
-     * @param key 键
-     * @param value 值
-     * @param time 过期时间
-     * @param unit 时间单位
+     * 添加缓存
+     *
+     * @param key      缓存键
+     * @param value    缓存值
+     * @param time     过期时间
+     * @param timeUnit 时间单位
      */
-    public void setWithLogicalExpire(String key, Object value, Long time, TimeUnit unit) {
-        // 设置逻辑过期
+    public void addCache(String key, Object value, Long time, TimeUnit timeUnit) {
+        stringRedisTemplate.opsForValue().set(key, JSONUtil.toJsonStr(value), time, timeUnit);
+    }
+
+    /**
+     * 添加缓存并使用逻辑过期
+     *
+     * @param key      缓存键
+     * @param value    缓存值
+     * @param time     过期时间
+     * @param timeUnit 时间单位
+     */
+    public void addCacheLogical(String key, Object value, Long time, TimeUnit timeUnit) {
         RedisData redisData = new RedisData();
+        redisData.setExpireTime(LocalDateTime.now().plusSeconds(timeUnit.toSeconds(time)));
         redisData.setData(value);
-        redisData.setExpireTime(LocalDateTime.now().plusSeconds(unit.toSeconds(time)));
-        // 写入redis
         stringRedisTemplate.opsForValue().set(key, JSONUtil.toJsonStr(redisData));
     }
 
-    /**
-     * 指定key查询缓存，并解决缓存穿透问题
-     * @param keyPrefix 键前缀
-     * @param id id
-     * @param type 缓存的实体类类型
-     * @param dbFallback 数据库操作函数
-     * @param time 过期时间
-     * @param unit 时间单位
-     * @return R
-     * @param <R> 未知类型的实体类
-     * @param <ID> 未知类型的id
-     */
-    public <R,ID> R queryWithPassThrough(
-            String keyPrefix, ID id, Class<R> type, Function<ID, R> dbFallback, Long time, TimeUnit unit
-    ) {
-        // 通过key前缀和id拼接完整key
-        String key = keyPrefix + id;
-        // 从redis中查询缓存
-        String json = stringRedisTemplate.opsForValue().get(key);
-        // 判断缓存是否存在
-        if (StrUtil.isNotBlank(json)) {
-            // 缓存存在，直接返回
-            return JSONUtil.toBean(json, type);
-        }
-        // 判断命中的缓存是否为空值
-        if (json != null) {
-            // 如果json不是null，但是isNotBlank方法为false，那么可以判断此时redis缓存的是空值
-            // 返回错误信息
-            httpServletResponse.setStatus(HttpServletResponse.SC_NOT_FOUND);
-            return null;
-        }
-        // 缓存不存在，根据id查询数据库
-        R r = dbFallback.apply(id);
-        // 数据库不存在，返回错误
-        if (r == null) {
-            // 将空值写入redis做为缓存
-            this.set(key, "", ShopConstant.SHOP_NULL_TTL, TimeUnit.MINUTES);
-            // 返回错误信息
-            httpServletResponse.setStatus(HttpServletResponse.SC_NOT_FOUND);
-            return null;
-        }
-        // 数据库存在，写入redis作为缓存
-        this.set(key, r, time, unit);
-        // 返回数据库查询的数据
-        return r;
-    }
 
-    // 创建线程池
-    private static final ExecutorService executor = Executors.newFixedThreadPool(10);
-
-    /**
-     * 指定key查询缓存，使用逻辑过期解决缓存击穿问题
-     * @param keyPrefix 键前缀
-     * @param id id
-     * @param type 缓存的实体类类型
-     * @param dbFallback 数据库操作函数
-     * @param time 过期时间
-     * @param unit 时间单位
-     * @return R
-     * @param <R> 未知类型的实体类
-     * @param <ID> 未知类型的id
-     */
-    public <R, ID> R queryWithLogicalExpire(
-            String keyPrefix, ID id, Class<R> type, Function<ID, R> dbFallback, Long time, TimeUnit unit
-    ) {
-        String key = keyPrefix + id;
-        // 从redis查询缓存
-        String json = stringRedisTemplate.opsForValue().get(key);
-        // 判断缓存是否存在
-        if (StrUtil.isBlank(json)) {
-            // 不存在，直接返回
+    public <R, T> R queryWithCachePierce(String keyPrefix, T suffix, Class<R> type, Long time, TimeUnit timeUnit, Function<T, R> dbQuery) {
+        String key = keyPrefix + suffix;
+        // 1.从Redis中获取缓存
+        String s = stringRedisTemplate.opsForValue().get(key);
+        if (StrUtil.isNotBlank(s)) {
+            // 1.2如果缓存不为空，直接返回
+            return JSONUtil.toBean(s, type);
+        }
+        if (s != null) {
+            // 1.3此时缓存为空字符串，直接返回
             return null;
         }
-        // 缓存存在，反序列化为对象后获取数据和过期时间
-        RedisData redisData = JSONUtil.toBean(json, RedisData.class);
-        R r = JSONUtil.toBean((JSONObject) redisData.getData(), type);
-        LocalDateTime expireTime = redisData.getExpireTime();
-        // 判断是否过期
-        if (expireTime.isAfter(LocalDateTime.now())) {
-            // 未过期，直接返回店铺信息
-            return r;
+        R result = null;
+        try {
+            // 2.缓存不存在，需要查询数据库重建缓存
+            if (!tryLock(ShopConstant.SHOP_LOCK_KEY + suffix)) {
+                // 2.1获取互斥锁失败，等待并重新查询缓存
+                Thread.sleep(50);
+                queryWithCachePierce(keyPrefix, suffix, type, time, timeUnit, dbQuery);
+            }
+            // 2.1成功获得互斥锁
+            // 2.2二次判断缓存重建是否成功
+            R cacheResult = doubleCheck(key, type);
+            if (cacheResult != null) {
+                // 2.3缓存重建成功，直接返回
+                return cacheResult;
+            }
+            // 2.4缓存重建失败，开始缓存重建
+            result = dbQuery.apply(suffix);
+            if (result == null) {
+                // 2.5查询结果为空，则缓存空字符串解决缓存穿透
+                stringRedisTemplate.opsForValue().set(key, "", ShopConstant.SHOP_NULL_TTL, TimeUnit.MINUTES);
+                unLock(ShopConstant.SHOP_LOCK_KEY + suffix);
+                return null;
+            }
+            // 2.6查询结果不为空，将其接入Redis重建缓存
+            this.addCache(key, result, time, timeUnit);
+
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } finally {
+            unLock(ShopConstant.SHOP_LOCK_KEY + suffix);
         }
-        // 已过期，需要缓存重建
-        // 缓存重建
-        String lockKey = ShopConstant.SHOP_LOCK_KEY + id;
-        // 获取互斥锁
-        boolean lock = tryLock(lockKey);
-        if (lock) {
-            // 获取锁成功，开启新的独立线程进行缓存重建
-            executor.submit(() -> {
-               try {
-                   // 缓存重建
-                   // 查询数据库
-                   R newR = dbFallback.apply(id);
-                   // 重建缓存
-                   this.setWithLogicalExpire(key, newR, time, unit);
-               } catch (Exception e) {
-                   throw new RuntimeException();
-               } finally {
-                   // 释放锁
-                   unlock(lockKey);
-               }
-            });
-        }
-        // 获取锁失败，临时返回过期的商铺信息
-        return r;
+        return result;
     }
 
     /**
-     * 获取锁
-     * @param key 锁
-     * @return boolean
+     * 获取互斥锁
+     *
+     * @param key 键
+     * @return 是否获取到锁
      */
     private boolean tryLock(String key) {
-        Boolean flag = stringRedisTemplate.opsForValue().setIfAbsent(key, "1", 10, TimeUnit.SECONDS);
-        return BooleanUtil.isTrue(flag);
+        // 通过setNX命令实现互斥锁
+        Boolean lock = stringRedisTemplate.opsForValue().setIfAbsent(key, "lock", ShopConstant.SHOP_LOCK_TTL, TimeUnit.SECONDS);
+        // 通过BooleanUtil进行封装返回，避免空指针
+        return BooleanUtil.isTrue(lock);
     }
 
     /**
-     * 释放锁
-     * @param key 锁
+     * 释放互斥锁
+     *
+     * @param key 键
      */
-    private void unlock(String key) {
+    private void unLock(String key) {
         stringRedisTemplate.delete(key);
+    }
+
+    /**
+     * 获取锁之后的二次判断
+     *
+     * @param key 键
+     * @return Shop 店铺信息
+     */
+    private <R> R doubleCheck(String key, Class<R> type) {
+        String shopJson = stringRedisTemplate.opsForValue().get(key);
+        if (StrUtil.isBlank(shopJson)) {
+            return null;
+        }
+        return JSONUtil.toBean(shopJson, type);
     }
 }
