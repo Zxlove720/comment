@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 public class RedisData {
-    // 该键过期时间
+    // 该键逻辑过期时间
     private LocalDateTime expireTime;
     // 该键对应的实体类
     private Object data;

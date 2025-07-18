@@ -5,6 +5,7 @@ import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONUtil;
 import com.comment.constant.ErrorConstant;
 import com.comment.constant.ShopConstant;
+import com.comment.entity.RedisData;
 import com.comment.entity.Shop;
 import com.comment.mapper.ShopMapper;
 import com.comment.service.IShopService;
@@ -17,6 +18,9 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -35,6 +39,8 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
     private StringRedisTemplate stringRedisTemplate;
     @Resource
     private HttpServletResponse httpServletResponse;
+
+    private static final ExecutorService CACHE_REBUILD_EXECUTOR = Executors.newFixedThreadPool(10);
     @Resource
     private CacheClient cacheClient;
 
@@ -91,6 +97,37 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
             unLock(ShopConstant.SHOP_LOCK_KEY + id);
         }
         // 5.返回商户信息
+        return shop;
+    }
+
+    public Shop queryWithLogicalExpire(Long id) {
+        String key = ShopConstant.SHOP_CACHE_KEY + id;
+        // 1.先从Redis中获取店铺信息
+        String shopJson = stringRedisTemplate.opsForValue().get(key);
+        if (StrUtil.isBlank(shopJson)) {
+            // 1.2如果Redis中没有对应缓存，直接返回空
+            return null;
+        }
+        // 2.缓存命中，判断是否过期
+        RedisData redisData = JSONUtil.toBean(shopJson, RedisData.class);
+        LocalDateTime expireTime = redisData.getExpireTime();
+        Shop shopCache = (Shop)redisData.getData();
+        if (expireTime.isAfter(LocalDateTime.now())) {
+            // 2.2缓存没有过期，直接返回
+            return shopCache;
+        }
+        // 3.缓存过期，需要进行重建
+        // 3.1获取互斥锁
+        if (!tryLock(key)) {
+            // 3.2获取锁失败，直接返回
+            return shopCache;
+        }
+        // 3.3获取锁成功，通过线程池开启新线程重建
+        Shop shop = getById(id);
+        // 3.4封装逻辑过期时间
+        RedisData redisData1 = new RedisData(LocalDateTime.now().plusSeconds(10), shop);
+        // 3.5将其写入Redis
+        stringRedisTemplate.opsForValue().set(key, JSONUtil.toJsonStr(redisData1));
         return shop;
     }
 
