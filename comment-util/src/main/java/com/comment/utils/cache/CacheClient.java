@@ -60,7 +60,19 @@ public class CacheClient {
         stringRedisTemplate.opsForValue().set(key, JSONUtil.toJsonStr(redisData));
     }
 
-
+    /**
+     * 缓存穿透并使用互斥锁解决缓存击穿
+     *
+     * @param keyPrefix 缓存键前缀
+     * @param suffix 缓存键后缀（一般为id）
+     * @param type 返回类型
+     * @param time 缓存有效期
+     * @param timeUnit 时间单位
+     * @param dbQuery 数据库查询函数
+     * @return R
+     * @param <R> 返回实体类型
+     * @param <T> 不同类型的缓存后缀
+     */
     public <R, T> R queryWithCachePierce(String keyPrefix, T suffix, Class<R> type, Long time, TimeUnit timeUnit, Function<T, R> dbQuery) {
         String key = keyPrefix + suffix;
         // 1.从Redis中获取缓存

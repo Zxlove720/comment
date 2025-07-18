@@ -52,7 +52,7 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
     @Override
     public Shop queryShopById(Long id) {
         return cacheClient.queryWithCachePierce(ShopConstant.SHOP_CACHE_KEY, id, Shop.class,
-                ShopConstant.SHOP_CACHE_TTL, TimeUnit.SECONDS, this::queryShopById);
+                ShopConstant.SHOP_CACHE_TTL, TimeUnit.SECONDS, this::getById);
     }
 
 //    public Shop queryShopById(Long id) {
