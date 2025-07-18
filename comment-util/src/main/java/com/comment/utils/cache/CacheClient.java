@@ -33,6 +33,8 @@ public class CacheClient {
         this.stringRedisTemplate = stringRedisTemplate;
     }
 
+    private static final ExecutorService CACHE_REBUILD_EXECUTOR = Executors.newFixedThreadPool(10);
+
     /**
      * 添加缓存
      *
@@ -64,14 +66,14 @@ public class CacheClient {
      * 缓存穿透并使用互斥锁解决缓存击穿
      *
      * @param keyPrefix 缓存键前缀
-     * @param suffix 缓存键后缀（一般为id）
-     * @param type 返回类型
-     * @param time 缓存有效期
-     * @param timeUnit 时间单位
-     * @param dbQuery 数据库查询函数
+     * @param suffix    缓存键后缀（一般为id）
+     * @param type      返回类型
+     * @param time      缓存有效期
+     * @param timeUnit  时间单位
+     * @param dbQuery   数据库查询函数
+     * @param <R>       返回实体类型
+     * @param <T>       不同类型的缓存后缀
      * @return R
-     * @param <R> 返回实体类型
-     * @param <T> 不同类型的缓存后缀
      */
     public <R, T> R queryWithCachePierce(String keyPrefix, T suffix, Class<R> type, Long time, TimeUnit timeUnit, Function<T, R> dbQuery) {
         String key = keyPrefix + suffix;
@@ -112,6 +114,57 @@ public class CacheClient {
             this.addCache(key, result, time, timeUnit);
         } catch (InterruptedException e) {
             log.error("error:", e);
+        } finally {
+            unLock(ShopConstant.SHOP_LOCK_KEY + suffix);
+        }
+        return result;
+    }
+
+    /**
+     * 逻辑过期解决缓存击穿
+     *
+     * @param keyPrefix 缓存键前缀
+     * @param suffix    缓存键后缀（一般为id）
+     * @param type      返回类型
+     * @param time      缓存有效期
+     * @param timeUnit  时间单位
+     * @param dbQuery   数据库查询函数
+     * @param <R>       返回实体类型
+     * @param <T>       不同类型的缓存后缀
+     * @return R
+     */
+    public <R, T> R queryWithLogicalExpire(String keyPrefix, T suffix, Class<R> type, Long time, TimeUnit timeUnit, Function<T, R> dbQuery) {
+        String key = keyPrefix + suffix;
+        // 1.从Redis中获取缓存
+        String cache = stringRedisTemplate.opsForValue().get(key);
+        if (StrUtil.isBlank(cache)) {
+            // 1.2如果缓存为空，直接返回空值
+            return null;
+        }
+        // 2.缓存命中，根据逻辑过期时间判断是否过期
+        RedisData redisData = JSONUtil.toBean(cache, RedisData.class);
+        JSONObject data = (JSONObject) redisData.getData();
+        R resultCache = JSONUtil.toBean(data, type);
+        LocalDateTime expireTime = redisData.getExpireTime();
+        if (LocalDateTime.now().isBefore(expireTime)) {
+            // 2.1缓存没有过期，直接返回
+            return resultCache;
+        }
+        // 3.缓存已经过期，需要进行重建
+        R result = null;
+        try {
+            if (!tryLock(ShopConstant.SHOP_LOCK_KEY + suffix)) {
+                // 3.1获取锁失败，直接返回
+                return resultCache;
+            }
+            // 3.3获取锁成功，通过线程池开启新线程重建
+            result = dbQuery.apply(suffix);
+            // 3.4封装逻辑过期时间
+            RedisData redisData1 = new RedisData(LocalDateTime.now().plusSeconds(10), result);
+            // 3.5将其写入Redis
+            stringRedisTemplate.opsForValue().set(key, JSONUtil.toJsonStr(redisData1));
+        } catch (Exception e) {
+            log.error("error", e);
         } finally {
             unLock(ShopConstant.SHOP_LOCK_KEY + suffix);
         }
