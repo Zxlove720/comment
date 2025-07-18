@@ -7,7 +7,7 @@ public class ShopConstant {
 
     public static final String SHOP_CACHE_KEY = "comment:cache:shop:id:";
 
-    public static final String SHOP_LOCK_KEY = "comment:shop:lock:";
+    public static final String SHOP_LOCK_KEY = "comment:lock:shop:id:";
 
     public static final String SHOP_UPDATE_SUCCESSFULLY = "店铺信息更新成功";
 
