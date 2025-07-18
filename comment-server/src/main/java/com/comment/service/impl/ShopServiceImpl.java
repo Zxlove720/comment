@@ -69,6 +69,7 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
             // 2.3获取锁成功，先判断Redis中此时是否有缓存，避免重复更新
             Shop shopCheck = doubleCheck(ShopConstant.SHOP_CACHE_KEY + id);
             if (shopCheck != null) {
+                // 2.4此时缓存已经重建成功，可以直接返回
                 return shopCheck;
             }
             shop = getById(id);
