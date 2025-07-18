@@ -1,5 +1,6 @@
 package com.comment.service.impl;
 
+import cn.hutool.core.util.BooleanUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONUtil;
 import com.comment.constant.ErrorConstant;
@@ -68,6 +69,28 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
                 ShopConstant.SHOP_CACHE_TTL, TimeUnit.MINUTES);
         // 4.返回商户信息
         return shop;
+    }
+
+    /**
+     * 获取互斥锁
+     *
+     * @param key 键
+     * @return 是否获取到锁
+     */
+    private boolean tryLock(String key) {
+        // 通过setNX命令实现互斥锁
+        Boolean lock = stringRedisTemplate.opsForValue().setIfAbsent(key, "lock", ShopConstant.SHOP_LOCK_TTL, TimeUnit.SECONDS);
+        // 通过BooleanUtil进行封装返回，避免空指针
+        return BooleanUtil.isTrue(lock);
+    }
+
+    /**
+     * 释放互斥锁
+     *
+     * @param key 键
+     */
+    private void unLock(String key) {
+        stringRedisTemplate.delete(key);
     }
 
     /**

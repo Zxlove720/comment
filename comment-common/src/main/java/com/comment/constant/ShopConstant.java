@@ -15,5 +15,7 @@ public class ShopConstant {
 
     public static final Long SHOP_NULL_TTL = 3L;
 
+    public static final Long SHOP_LOCK_TTL = 10L;
+
 }
 
