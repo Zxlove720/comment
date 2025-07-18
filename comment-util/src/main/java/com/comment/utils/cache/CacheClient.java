@@ -79,7 +79,7 @@ public class CacheClient {
             if (!tryLock(ShopConstant.SHOP_LOCK_KEY + suffix)) {
                 // 2.1获取互斥锁失败，等待并重新查询缓存
                 Thread.sleep(50);
-                queryWithCachePierce(keyPrefix, suffix, type, time, timeUnit, dbQuery);
+                return queryWithCachePierce(keyPrefix, suffix, type, time, timeUnit, dbQuery);
             }
             // 2.1成功获得互斥锁
             // 2.2二次判断缓存重建是否成功
@@ -98,7 +98,6 @@ public class CacheClient {
             }
             // 2.6查询结果不为空，将其接入Redis重建缓存
             this.addCache(key, result, time, timeUnit);
-
         } catch (InterruptedException e) {
             e.printStackTrace();
         } finally {
@@ -136,10 +135,12 @@ public class CacheClient {
      * @return Shop 店铺信息
      */
     private <R> R doubleCheck(String key, Class<R> type) {
-        String shopJson = stringRedisTemplate.opsForValue().get(key);
-        if (StrUtil.isBlank(shopJson)) {
+        String json = stringRedisTemplate.opsForValue().get(key);
+        if (json == null || json.isEmpty()) {
             return null;
+        } else {
+            return JSONUtil.toBean(json, type);
         }
-        return JSONUtil.toBean(shopJson, type);
+
     }
 }
