@@ -93,8 +93,15 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
         return shop;
     }
 
+    /**
+     * 获取锁之后的二次判断
+     *
+     * @param key 键
+     * @return Shop 店铺信息
+     */
     private Shop doubleCheck(String key) {
-        return JSONUtil.toBean(stringRedisTemplate.opsForValue().get(key), Shop.class);
+        String shopJson = stringRedisTemplate.opsForValue().get(key);
+        return shopJson == null ? null : JSONUtil.toBean(shopJson, Shop.class);
     }
 
     /**
