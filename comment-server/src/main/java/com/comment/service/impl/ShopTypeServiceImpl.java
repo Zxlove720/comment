@@ -19,7 +19,7 @@ import java.util.List;
  * </p>
  *
  * @author wzb
- * @since 2025-2-12
+ * @since 2025-7-1
  */
 @Service
 public class ShopTypeServiceImpl extends ServiceImpl<ShopTypeMapper, ShopType> implements IShopTypeService {
