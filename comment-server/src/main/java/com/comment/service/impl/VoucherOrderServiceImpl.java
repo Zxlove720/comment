@@ -59,7 +59,22 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
             // 4.1此时库存不足
             throw new RuntimeException(ErrorConstant.VOUCHER_IS_SOLD_OUT);
         }
-        // 5.如果在秒杀时间内、库存充足并且库存没有改变，则扣减库存
+        Long userId = UserHolder.getUser().getId();
+        synchronized (userId.toString().intern()) {
+            return createVoucherOrder(voucherId);
+        }
+    }
+
+    @Transactional
+    public Long createVoucherOrder(Long voucherId) {
+        // 获取用户id
+        Long userId = UserHolder.getUser().getId();
+        Long count = query().eq("user_id", userId).eq("voucher_id", voucherId).count();
+        if (count > 0) {
+            // 用户已经重复下单，拒绝再次购买
+            throw new RuntimeException(ErrorConstant.VOUCHER_HAS_BEEN_BOUGHT);
+        }
+        // 5.如果在秒杀时间内、库存充足、库存没有改变并且用户没有下单，则扣减库存
         boolean success = seckillVoucherService.update()
                 .setSql("stock = stock - 1")
                 .eq("voucher_id", voucherId)
@@ -75,7 +90,7 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
         long orderId = globalIDCreator.getGlobalID("order");
         voucherOrder.setId(orderId);
         // 6.2创建用户id
-        voucherOrder.setUserId(UserHolder.getUser().getId());
+        voucherOrder.setUserId(userId);
         // 6.3创建优惠券id
         voucherOrder.setVoucherId(voucherId);
         // 6.4将订单保存至数据库

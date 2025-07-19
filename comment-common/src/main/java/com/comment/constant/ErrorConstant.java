@@ -19,4 +19,6 @@ public class ErrorConstant {
 
     public static final String VOUCHER_IS_SOLD_OUT = "优惠券库存不足";
 
+    public static final String VOUCHER_HAS_BEEN_BOUGHT = "您已经购买了该优惠券";
+
 }
