@@ -28,19 +28,21 @@ public class VoucherServiceImpl extends ServiceImpl<VoucherMapper, Voucher> impl
     private ISeckillVoucherService seckillVoucherService;
 
     @Override
-    public Result queryVoucherOfShop(Long shopId) {
+    public List<Voucher> queryVoucherOfShop(Long shopId) {
         // 查询优惠券信息
-        List<Voucher> vouchers = getBaseMapper().queryVoucherOfShop(shopId);
-        // 返回结果
-        return Result.ok(vouchers);
+        return getBaseMapper().queryVoucherOfShop(shopId);
     }
 
+    /**
+     * 新增秒杀优惠券
+     * @param voucher 秒杀优惠券
+     */
     @Override
     @Transactional
     public void addSeckillVoucher(Voucher voucher) {
-        // 保存优惠券
+        // 保存到普通优惠券表
         save(voucher);
-        // 保存秒杀信息
+        // 保存秒杀信息至秒杀优惠券表
         SeckillVoucher seckillVoucher = new SeckillVoucher();
         seckillVoucher.setVoucherId(voucher.getId());
         seckillVoucher.setStock(voucher.getStock());

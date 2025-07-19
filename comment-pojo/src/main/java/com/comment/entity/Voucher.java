@@ -8,16 +8,17 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.Accessors;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
 /**
  * <p>
- * 
+ * 优惠券实体类
  * </p>
  *
  * @author wzb
- * @since 2025-2-12
+ * @since 2025-7-1
  */
 @Data
 @EqualsAndHashCode(callSuper = false)
@@ -25,6 +26,7 @@ import java.time.LocalDateTime;
 @TableName("tb_voucher")
 public class Voucher implements Serializable {
 
+    @Serial
     private static final long serialVersionUID = 1L;
 
     /**
