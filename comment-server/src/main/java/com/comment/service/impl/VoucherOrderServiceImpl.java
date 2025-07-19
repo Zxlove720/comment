@@ -14,6 +14,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+//TODO解决超卖问题的乐观锁CAS实现和版本号实现是重点
+//TODO解决一人一单问题时使用的事务机制是重点
 
 /**
  * <p>
@@ -36,6 +38,7 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
      * 优惠券秒杀-乐观锁解决超卖
      *
      * @param voucherId 优惠券id
+     * @return Long 订单id
      */
     @Override
     @Transactional
@@ -59,43 +62,52 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
             // 4.1此时库存不足
             throw new RuntimeException(ErrorConstant.VOUCHER_IS_SOLD_OUT);
         }
+        // 5.获取用户id并以此加锁，确保一人一单
         Long userId = UserHolder.getUser().getId();
         synchronized (userId.toString().intern()) {
+            // 5.1创建优惠券订单
             return createVoucherOrder(voucherId);
         }
     }
 
+    /**
+     * 创建优惠券订单
+     *
+     * @param voucherId 优惠券id
+     * @return Long 订单id
+     */
     @Transactional
     public Long createVoucherOrder(Long voucherId) {
-        // 获取用户id
+        // 1.确保一个用户只能购买一单
         Long userId = UserHolder.getUser().getId();
+        // 1.1查询用户是否已经购买过该优惠券
         Long count = query().eq("user_id", userId).eq("voucher_id", voucherId).count();
         if (count > 0) {
-            // 用户已经重复下单，拒绝再次购买
+            // 1.2用户已经重复下单，拒绝再次购买
             throw new RuntimeException(ErrorConstant.VOUCHER_HAS_BEEN_BOUGHT);
         }
-        // 5.如果在秒杀时间内、库存充足、库存没有改变并且用户没有下单，则扣减库存
+        // 2.如果在秒杀时间内、库存充足、库存没有改变并且用户重复购买，则扣减库存完成下单
         boolean success = seckillVoucherService.update()
                 .setSql("stock = stock - 1")
                 .eq("voucher_id", voucherId)
                 .gt("stock", 0).
                 update();
         if (!success) {
-            // 5.1修改库存失败，终止业务
+            // 2.1修改库存失败，终止业务
             throw new RuntimeException(ErrorConstant.VOUCHER_IS_SOLD_OUT);
         }
-        // 6.购买成功，创建订单
+        // 3.购买成功，创建订单
         VoucherOrder voucherOrder = new VoucherOrder();
-        // 6.1创建订单id
+        // 3.1创建订单id
         long orderId = globalIDCreator.getGlobalID("order");
         voucherOrder.setId(orderId);
-        // 6.2创建用户id
+        // 3.2创建用户id
         voucherOrder.setUserId(userId);
-        // 6.3创建优惠券id
+        // 3.3创建优惠券id
         voucherOrder.setVoucherId(voucherId);
-        // 6.4将订单保存至数据库
+        // 3.4将订单保存至数据库
         save(voucherOrder);
-        // 7.返回订单id
+        // 4.返回订单id
         return orderId;
     }
 }
