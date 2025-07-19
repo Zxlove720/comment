@@ -153,16 +153,11 @@ public class CacheClient {
         // 3.缓存已经过期，需要进行重建
         R result = null;
         try {
-            if (!tryLock(ShopConstant.SHOP_LOCK_KEY + suffix)) {
-                // 3.1获取锁失败，直接返回
-                return resultCache;
+            if (tryLock(ShopConstant.SHOP_LOCK_KEY + suffix)) {
+                this.addCacheLogical(key, resultCache, time, timeUnit);
             }
-            // 3.3获取锁成功，通过线程池开启新线程重建
-            result = dbQuery.apply(suffix);
-            // 3.4封装逻辑过期时间
-            RedisData redisData1 = new RedisData(LocalDateTime.now().plusSeconds(10), result);
-            // 3.5将其写入Redis
-            stringRedisTemplate.opsForValue().set(key, JSONUtil.toJsonStr(redisData1));
+            // 3.4是否获取到锁都需要返回原有缓存值
+            return resultCache;
         } catch (Exception e) {
             log.error("error", e);
         } finally {
