@@ -35,6 +35,8 @@
         <commons-pool2.version>2.12.0</commons-pool2.version>
         <mybatis-spring.version>3.0.4</mybatis-spring.version>
         <hutool.version>5.8.22</hutool.version>
+        <aspectjweaver.version>1.9.22</aspectjweaver.version>
+        <aspectjrt.version>1.9.22</aspectjrt.version>
     </properties>
 
     <dependencyManagement>
@@ -109,6 +111,13 @@
                 <artifactId>hutool-all</artifactId>
                 <version>${hutool.version}</version>
             </dependency>
+
+            <dependency>
+                <groupId>org.aspectj</groupId>
+                <artifactId>aspectjweaver</artifactId>
+                <version>${aspectjweaver.version}</version>
+            </dependency>
+
         </dependencies>
     </dependencyManagement>
 

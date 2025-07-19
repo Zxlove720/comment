@@ -10,6 +10,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.comment.utils.UserHolder;
 import com.comment.utils.id.GlobalIDCreator;
 import jakarta.annotation.Resource;
+import org.springframework.aop.framework.AopContext;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -41,7 +42,6 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
      * @return Long 订单id
      */
     @Override
-    @Transactional
     public Long seckillVoucher(Long voucherId) {
         // 1.查询优惠券
         SeckillVoucher seckillVoucher = seckillVoucherService.getById(voucherId);
@@ -66,8 +66,10 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
         Long userId = UserHolder.getUser().getId();
         synchronized (userId.toString().intern()) {
             // 5.1创建优惠券订单
-            return createVoucherOrder(voucherId);
+            IVoucherOrderService proxy = (IVoucherOrderService) AopContext.currentProxy();
+            return proxy.createVoucherOrder(voucherId);
         }
+        // 需要等创建订单的事务全部提交之后，再释放锁
     }
 
     /**
