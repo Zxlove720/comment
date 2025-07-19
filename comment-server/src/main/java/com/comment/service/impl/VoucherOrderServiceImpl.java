@@ -1,7 +1,6 @@
 package com.comment.service.impl;
 
 import com.comment.constant.ErrorConstant;
-import com.comment.dto.Result;
 import com.comment.entity.SeckillVoucher;
 import com.comment.entity.VoucherOrder;
 import com.comment.mapper.VoucherOrderMapper;
@@ -37,23 +36,23 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
      * @param voucherId 优惠券id
      */
     @Override
-    public Result seckillVoucher(Long voucherId) {
+    public Long seckillVoucher(Long voucherId) {
         // 1.查询优惠券
         SeckillVoucher voucher = seckillVoucherService.getById(voucherId);
         // 2.判断秒杀是否开始
         if (voucher.getBeginTime().isAfter(LocalDateTime.now())) {
             // 秒杀未开始，返回错误
-            return Result.fail(ErrorConstant.VOUCHER_NOT_START);
+            throw new RuntimeException(ErrorConstant.VOUCHER_NOT_START);
         }
         // 3.判断秒杀是否结束
         if (voucher.getEndTime().isBefore(LocalDateTime.now())) {
             // 秒杀已经结束，返回错误
-            return Result.fail(ErrorConstant.VOUCHER_IS_END);
+            throw new RuntimeException(ErrorConstant.VOUCHER_IS_END);
         }
         // 4.判断库存是否充足
         if (voucher.getStock() < 1) {
             // 库存不足，返回错去
-            return Result.fail(ErrorConstant.VOUCHER_IS_SOLD_OUT);
+            throw new RuntimeException(ErrorConstant.VOUCHER_IS_SOLD_OUT);
         }
         // 5.如果在秒杀时间内且库存充足，则扣减库存
         boolean success = seckillVoucherService.update()
@@ -61,12 +60,12 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
                 .eq("voucher_id", voucherId).update();
         if (!success) {
             // 修改库存失败，返回错误
-            return Result.fail(ErrorConstant.VOUCHER_IS_SOLD_OUT);
+            throw new RuntimeException(ErrorConstant.VOUCHER_IS_SOLD_OUT);
         }
         // 6.购买成功，创建订单
         VoucherOrder voucherOrder = new VoucherOrder();
         // 订单id
-        long orderId = globalIDCreator.nextId("order");
+        long orderId = globalIDCreator.getGlobalID("order");
         voucherOrder.setId(orderId);
         // 下单用户id
         voucherOrder.setUserId(UserHolder.getUser().getId());
@@ -74,6 +73,6 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
         voucherOrder.setVoucherId(voucherId);
         // 保存订单到数据库
         save(voucherOrder);
-        return Result.ok(orderId);
+        return orderId;
     }
 }
