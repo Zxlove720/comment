@@ -11,6 +11,7 @@ import com.comment.utils.UserHolder;
 import com.comment.utils.id.GlobalIDCreator;
 import jakarta.annotation.Resource;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 
@@ -32,10 +33,12 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
     private GlobalIDCreator globalIDCreator;
 
     /**
-     * 优惠券秒杀
+     * 优惠券秒杀-乐观锁解决超卖
+     *
      * @param voucherId 优惠券id
      */
     @Override
+    @Transactional
     public Long seckillVoucher(Long voucherId) {
         // 1.查询优惠券
         SeckillVoucher seckillVoucher = seckillVoucherService.getById(voucherId);
@@ -50,14 +53,18 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
             throw new RuntimeException(ErrorConstant.VOUCHER_IS_END);
         }
         // 4.此时处于秒杀时段内，判断库存是否充足
-        if (seckillVoucher.getStock() < 1) {
+        // 4.1获取当前库存
+        int stock = seckillVoucher.getStock();
+        if (stock < 1) {
             // 4.1此时库存不足
             throw new RuntimeException(ErrorConstant.VOUCHER_IS_SOLD_OUT);
         }
-        // 5.如果在秒杀时间内且库存充足，则扣减库存
+        // 5.如果在秒杀时间内、库存充足并且库存没有改变，则扣减库存
         boolean success = seckillVoucherService.update()
                 .setSql("stock = stock - 1")
-                .eq("voucher_id", voucherId).update();
+                .eq("voucher_id", voucherId)
+                .gt("stock", 0).
+                update();
         if (!success) {
             // 5.1修改库存失败，终止业务
             throw new RuntimeException(ErrorConstant.VOUCHER_IS_SOLD_OUT);
