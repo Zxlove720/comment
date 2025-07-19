@@ -16,11 +16,11 @@ import java.time.LocalDateTime;
 
 /**
  * <p>
- *  优惠券秒杀服务实现类
+ * 优惠券秒杀服务实现类
  * </p>
  *
  * @author wzb
- * @since 2025-2-12
+ * @since 2025-7-1
  */
 @Service
 public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, VoucherOrder> implements IVoucherOrderService {
@@ -38,20 +38,20 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
     @Override
     public Long seckillVoucher(Long voucherId) {
         // 1.查询优惠券
-        SeckillVoucher voucher = seckillVoucherService.getById(voucherId);
+        SeckillVoucher seckillVoucher = seckillVoucherService.getById(voucherId);
         // 2.判断秒杀是否开始
-        if (voucher.getBeginTime().isAfter(LocalDateTime.now())) {
-            // 秒杀未开始，返回错误
+        if (seckillVoucher.getBeginTime().isAfter(LocalDateTime.now())) {
+            // 2.1此时秒杀仍未开始
             throw new RuntimeException(ErrorConstant.VOUCHER_NOT_START);
         }
         // 3.判断秒杀是否结束
-        if (voucher.getEndTime().isBefore(LocalDateTime.now())) {
-            // 秒杀已经结束，返回错误
+        if (seckillVoucher.getEndTime().isBefore(LocalDateTime.now())) {
+            // 3.1此时秒杀已经结束
             throw new RuntimeException(ErrorConstant.VOUCHER_IS_END);
         }
-        // 4.判断库存是否充足
-        if (voucher.getStock() < 1) {
-            // 库存不足，返回错去
+        // 4.此时处于秒杀时段内，判断库存是否充足
+        if (seckillVoucher.getStock() < 1) {
+            // 4.1此时库存不足
             throw new RuntimeException(ErrorConstant.VOUCHER_IS_SOLD_OUT);
         }
         // 5.如果在秒杀时间内且库存充足，则扣减库存
@@ -59,20 +59,21 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
                 .setSql("stock = stock - 1")
                 .eq("voucher_id", voucherId).update();
         if (!success) {
-            // 修改库存失败，返回错误
+            // 5.1修改库存失败，终止业务
             throw new RuntimeException(ErrorConstant.VOUCHER_IS_SOLD_OUT);
         }
         // 6.购买成功，创建订单
         VoucherOrder voucherOrder = new VoucherOrder();
-        // 订单id
+        // 6.1创建订单id
         long orderId = globalIDCreator.getGlobalID("order");
         voucherOrder.setId(orderId);
-        // 下单用户id
+        // 6.2创建用户id
         voucherOrder.setUserId(UserHolder.getUser().getId());
-        // 优惠券id
+        // 6.3创建优惠券id
         voucherOrder.setVoucherId(voucherId);
-        // 保存订单到数据库
+        // 6.4将订单保存至数据库
         save(voucherOrder);
+        // 7.返回订单id
         return orderId;
     }
 }
