@@ -36,10 +36,7 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
 
     @Resource
     private StringRedisTemplate stringRedisTemplate;
-    @Resource
-    private HttpServletResponse httpServletResponse;
 
-    private static final ExecutorService CACHE_REBUILD_EXECUTOR = Executors.newFixedThreadPool(10);
     @Resource
     private CacheClient cacheClient;
 
@@ -47,7 +44,7 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
      * 根据id查询店铺信息
      *
      * @param id 店铺id
-     * @return Result
+     * @return Shop 店铺实体类
      */
     @Override
     public Shop queryShopById(Long id) {
@@ -55,38 +52,16 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
                 ShopConstant.SHOP_CACHE_TTL, TimeUnit.SECONDS, this::getById);
     }
 
-//    public Shop queryShopById(Long id) {
-//        String key = ShopConstant.SHOP_CACHE_KEY + id;
-//        // 1.先从Redis中获取店铺信息
-//        String shopJson = stringRedisTemplate.opsForValue().get(key);
-//        if (StrUtil.isBlank(shopJson)) {
-//            // 1.2如果Redis中没有对应缓存，直接返回空
-//            return null;
-//        }
-//        // 2.缓存命中，判断是否过期
-//        RedisData redisData = JSONUtil.toBean(shopJson, RedisData.class);
-//        LocalDateTime expireTime = redisData.getExpireTime();
-//        // 此时取出的data其实是JsonObject类型，所以说需要先转换，然后再用JsonUtil封装
-//        JSONObject shopObject = (JSONObject)redisData.getData();
-//        Shop shopCache = JSONUtil.toBean(shopObject, Shop.class);
-//        if (expireTime.isAfter(LocalDateTime.now())) {
-//            // 2.2缓存没有过期，直接返回
-//            return shopCache;
-//        }
-//        // 3.缓存过期，需要进行重建
-//        // 3.1获取互斥锁
-//        if (!tryLock(ShopConstant.SHOP_LOCK_KEY + id)) {
-//            // 3.2获取锁失败，直接返回
-//            return shopCache;
-//        }
-//        // 3.3获取锁成功，通过线程池开启新线程重建
-//        Shop shop = getById(id);
-//        // 3.4封装逻辑过期时间
-//        RedisData redisData1 = new RedisData(LocalDateTime.now().plusSeconds(10), shop);
-//        // 3.5将其写入Redis
-//        stringRedisTemplate.opsForValue().set(key, JSONUtil.toJsonStr(redisData1));
-//        return shop;
-//    }
+    /**
+     * 通过逻辑过期解决缓存击穿并查询店铺信息
+     *
+     * @param id 店铺id
+     * @return Shop 店铺实体类
+     */
+    public Shop queryShopByIdLogicalExpire(Long id) {
+        return cacheClient.queryWithLogicalExpire(ShopConstant.SHOP_CACHE_KEY, id, Shop.class,
+                ShopConstant.SHOP_CACHE_TTL, TimeUnit.SECONDS, this::getById);
+    }
 
     /**
      * 修改店铺信息
