@@ -7,7 +7,7 @@ import org.springframework.util.DigestUtils;
 import java.nio.charset.StandardCharsets;
 
 /**
- *
+ * 密码修改器
  */
 public class PasswordEncoder {
 
