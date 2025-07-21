@@ -1,7 +1,7 @@
 package com.comment.constant;
 
 /**
- * 
+ *
  */
 public class GlobalIDConstant {
 
