@@ -1,7 +1,7 @@
 package com.comment.constant;
 
 /**
- *
+ * 全局id生成常量类
  */
 public class GlobalIDConstant {
 
