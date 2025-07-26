@@ -5,6 +5,9 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 
 import java.util.concurrent.TimeUnit;
 
+/**
+ * 锁工具类
+ */
 public class LockUtil {
 
     private final StringRedisTemplate stringRedisTemplate;
