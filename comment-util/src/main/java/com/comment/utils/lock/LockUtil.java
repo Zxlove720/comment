@@ -35,6 +35,9 @@ public class LockUtil {
         return Boolean.TRUE.equals(lock);
     }
 
+    /**
+     * 释放锁
+     */
     public void unlock() {
         // 1.获取线程id，确保每个线程只能释放自己的锁
         long id = Thread.currentThread().getId();
