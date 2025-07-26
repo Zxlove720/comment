@@ -13,7 +13,7 @@ import java.util.List;
  * </p>
  *
  * @author wzb
- * @since 2025-2-12
+ * @since 2025-7-1
  */
 @Mapper
 public interface VoucherMapper extends BaseMapper<Voucher> {
