@@ -9,8 +9,10 @@ import com.comment.service.IVoucherOrderService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.comment.utils.UserHolder;
 import com.comment.utils.id.GlobalIDCreator;
+import com.comment.utils.lock.LockUtil;
 import jakarta.annotation.Resource;
 import org.springframework.aop.framework.AopContext;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -34,6 +36,9 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
 
     @Resource
     private GlobalIDCreator globalIDCreator;
+
+    @Resource
+    private StringRedisTemplate stringRedisTemplate;
 
     /**
      * 优惠券秒杀-乐观锁解决超卖
@@ -64,12 +69,21 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
         }
         // 5.获取用户id并以此加锁，确保一人一单
         Long userId = UserHolder.getUser().getId();
-        synchronized (userId.toString().intern()) {
-            // 5.1创建优惠券订单
+        // 5.1获取锁
+        LockUtil lockUtil = new LockUtil(stringRedisTemplate, "order:");
+        boolean lock = lockUtil.tryLock(10L);
+        if (!lock) {
+            // 5.2获取锁失败，抛出异常
+            throw new RuntimeException(ErrorConstant.VOUCHER_HAS_BEEN_BOUGHT);
+        }
+        try {
+            // 5.3获取锁成功，创建优惠券订单
             IVoucherOrderService proxy = (IVoucherOrderService) AopContext.currentProxy();
             return proxy.createVoucherOrder(voucherId);
+        } finally {
+            // 5.4业务执行结束或出现问题，释放锁
+            lockUtil.unlock();
         }
-        // 需要等创建订单的事务全部提交之后，再释放锁
     }
 
     /**
