@@ -19,6 +19,12 @@ public class LockUtil {
         this.name = name;
     }
 
+    /**
+     * 获取锁
+     *
+     * @param timeOut 锁过期时间
+     * @return 是否获取锁成功
+     */
     public boolean tryLock(long timeOut) {
         // 1.获取线程id，存入Redis
         long id = Thread.currentThread().getId();
