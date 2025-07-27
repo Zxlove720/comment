@@ -18,7 +18,7 @@ public class LockUtil {
 
     // 线程id前缀
     private static final String THREAD_PREFIX = UUID.randomUUID().toString(true);
-    
+
     public LockUtil(StringRedisTemplate stringRedisTemplate, String name) {
         this.stringRedisTemplate = stringRedisTemplate;
         this.name = name;
