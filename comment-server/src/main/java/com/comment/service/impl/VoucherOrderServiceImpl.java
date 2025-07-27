@@ -72,7 +72,7 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
         // 5.获取用户id并以此加锁，确保一人一单
         Long userId = UserHolder.getUser().getId();
         // 5.1获取锁
-        RLock rLock = redissonClient.getLock(LockConstant.LOCK_PREFIX + "order:");
+        RLock rLock = redissonClient.getLock(LockConstant.LOCK_PREFIX + "order:" + userId);
         boolean lock = rLock.tryLock(1, 10, TimeUnit.SECONDS);
         if (!lock) {
             // 5.2获取锁失败，抛出异常
