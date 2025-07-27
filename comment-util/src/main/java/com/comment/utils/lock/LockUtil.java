@@ -2,8 +2,11 @@ package com.comment.utils.lock;
 
 import cn.hutool.core.lang.UUID;
 import com.comment.constant.LockConstant;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.script.DefaultRedisScript;
 
+import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -18,6 +21,15 @@ public class LockUtil {
 
     // 线程id前缀
     private static final String THREAD_PREFIX = UUID.randomUUID().toString(true);
+
+    // 释放锁的LUA脚本
+    private static final DefaultRedisScript<Long> UNLOCK_SCRIPT;
+
+    static {
+        UNLOCK_SCRIPT = new DefaultRedisScript<>();
+        UNLOCK_SCRIPT.setLocation(new ClassPathResource("script/unlock.lua"));
+        UNLOCK_SCRIPT.setResultType(Long.class);
+    }
 
     public LockUtil(StringRedisTemplate stringRedisTemplate, String name) {
         this.stringRedisTemplate = stringRedisTemplate;
@@ -44,19 +56,11 @@ public class LockUtil {
      * 释放锁
      */
     public void unlock() {
-        // 1.获取线程id，确保每个线程只能释放自己的锁
-        String threadId = THREAD_PREFIX + "-" + Thread.currentThread().getId();
-        // 2.判断该线程是否释放的是自己的锁
-        String key = LockConstant.LOCK_PREFIX + name;
-        String value = stringRedisTemplate.opsForValue().get(key);
-        if (value == null) {
-            return;
-        }
-        if (!threadId.equals(value)) {
-            // 2.1当前线程id不等于Redis中的线程id，代表释放的不是同一把锁，直接返回
-            return;
-        }
-        // 2.2线程id等于Redis中的线程id，释放的是同一把锁，可以释放
-        stringRedisTemplate.delete(key);
+        // 调用LUA脚本释放锁，解决原子性问题
+        stringRedisTemplate.execute(
+                UNLOCK_SCRIPT,
+                Collections.singletonList(LockConstant.LOCK_PREFIX + name),
+                THREAD_PREFIX + "-" + Thread.currentThread().getId()
+        );
     }
 }
