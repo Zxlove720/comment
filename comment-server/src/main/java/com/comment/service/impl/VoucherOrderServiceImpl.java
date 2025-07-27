@@ -1,6 +1,7 @@
 package com.comment.service.impl;
 
 import com.comment.constant.ErrorConstant;
+import com.comment.constant.LockConstant;
 import com.comment.entity.SeckillVoucher;
 import com.comment.entity.VoucherOrder;
 import com.comment.mapper.VoucherOrderMapper;
@@ -9,14 +10,16 @@ import com.comment.service.IVoucherOrderService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.comment.utils.UserHolder;
 import com.comment.utils.id.GlobalIDCreator;
-import com.comment.utils.lock.LockUtil;
 import jakarta.annotation.Resource;
+import org.redisson.api.RLock;
+import org.redisson.api.RedissonClient;
 import org.springframework.aop.framework.AopContext;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.concurrent.TimeUnit;
 //TODO解决超卖问题的乐观锁CAS实现和版本号实现是重点
 //TODO解决一人一单问题时使用的事务机制是重点
 
@@ -40,6 +43,9 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
     @Resource
     private StringRedisTemplate stringRedisTemplate;
 
+    @Resource
+    private RedissonClient redissonClient;
+
     /**
      * 优惠券秒杀-乐观锁解决超卖
      *
@@ -47,7 +53,7 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
      * @return Long 订单id
      */
     @Override
-    public Long seckillVoucher(Long voucherId) {
+    public Long seckillVoucher(Long voucherId) throws InterruptedException {
         // 1.查询优惠券
         SeckillVoucher seckillVoucher = seckillVoucherService.getById(voucherId);
         // 2.判断秒杀是否开始
@@ -70,8 +76,8 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
         // 5.获取用户id并以此加锁，确保一人一单
         Long userId = UserHolder.getUser().getId();
         // 5.1获取锁
-        LockUtil lockUtil = new LockUtil(stringRedisTemplate, "order:");
-        boolean lock = lockUtil.tryLock(10L);
+        RLock rLock = redissonClient.getLock(LockConstant.LOCK_PREFIX + "order:");
+        boolean lock = rLock.tryLock(1, 10, TimeUnit.SECONDS);
         if (!lock) {
             // 5.2获取锁失败，抛出异常
             throw new RuntimeException(ErrorConstant.VOUCHER_HAS_BEEN_BOUGHT);
@@ -82,7 +88,7 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
             return proxy.createVoucherOrder(voucherId);
         } finally {
             // 5.4业务执行结束或出现问题，释放锁
-            lockUtil.unlock();
+            rLock.unlock();
         }
     }
 
