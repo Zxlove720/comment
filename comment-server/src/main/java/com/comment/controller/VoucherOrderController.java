@@ -33,4 +33,5 @@ public class VoucherOrderController {
     public Result<Long> seckillVoucher(@PathVariable("id") Long voucherId) throws InterruptedException {
         return Result.ok(voucherOrderService.seckillVoucher(voucherId));
     }
+    
 }
